@@ -9,7 +9,7 @@ import json
 import argparse
 
 from pathlib import Path
-from dotenv import load_dotenv , find_dotenv
+from dotenv import load_dotenv
  
 class Loader():
     def load_conf(self):
@@ -21,11 +21,6 @@ class Loader():
         except:
             pass
         return os.getenv("VLLM_API_KEY")
-
-
-if __name__ ==  "__main__":
-    print(Loader().load_conf()["url_api"])
-    print(Loader().load_env())
 
 
     

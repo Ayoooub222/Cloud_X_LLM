@@ -2,3 +2,4 @@
 *conf/app.conf
 .env*
 models/
+results/*
