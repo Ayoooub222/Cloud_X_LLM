@@ -1,3 +1,23 @@
 {
-    "python-envs.defaultEnvManager": "ms-python.python:system"
+  "github.copilot.chat.scopeExcludedFiles": [
+    "**/.env*",
+    "**/conf/app.conf"
+  ],
+  "github.copilot.advanced": {
+    "indexing": {
+      "exclude": [
+        "**/.env*",
+        "**/conf/app.conf",
+        "**/data/**"
+      ]
+    }
+  },
+  "files.exclude": {
+    "**/.env*": true,
+    "**/conf/app.conf": true
+  },
+  "search.exclude": {
+    "**/.env*": true,
+    "**/conf/app.conf": true
+  }
 }

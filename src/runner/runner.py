@@ -16,12 +16,13 @@ from src.utils.loader import Loader
 def argparse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("type_of_task")
+    parser.add_argument("singlepdf")
     args = parser.parse_args()
     return args
 
 def runner(args, api_key, key_env, date):
     if args.type_of_task == "vision":
-        VLLMAPICLIENT(api_key=api_key, key_env=key_env).generating_result(date=date, vision=True)
+        VLLMAPICLIENT(api_key=api_key, key_env=key_env , pdf_path=args.singlepdf).generating_result(date=date, vision=True)
 
 def main():
     date= str(time.strftime("%Y-%m-%d %H:%M:%S")) +  ".json"
