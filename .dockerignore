@@ -1,0 +1,8 @@
+models/
+venv/
+data/
+results/
+outputs/
+*.png
+.env
+.cache/

@@ -1,3 +1,5 @@
 openai
 dotenv 
 pymupdf
+httpx
+jsonschema

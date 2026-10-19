@@ -12,10 +12,6 @@
       ]
     }
   },
-  "files.exclude": {
-    "**/.env*": true,
-    "**/conf/app.conf": true
-  },
   "search.exclude": {
     "**/.env*": true,
     "**/conf/app.conf": true

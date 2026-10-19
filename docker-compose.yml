@@ -1,0 +1,62 @@
+# Un seul modèle GPU à la fois (8 Go VRAM) → bash scripts/switch.sh vision|image|audio
+
+# ---------- Ancres (TOUJOURS en haut du fichier) ----------
+x-gpu: &gpu
+  deploy:
+    resources:
+      reservations:
+        devices: [{ driver: nvidia, count: 1, capabilities: [gpu] }]
+
+x-vllm-env: &vllm-env
+  environment:
+    - HF_HUB_OFFLINE=1
+    - VLLM_USE_V2_MODEL_RUNNER=${VLLM_V2_RUNNER:-0}   # WSL2 : V2 runner = crash "UVA is not available"
+
+# ---------- Services ----------
+services:
+  vision:
+    <<: [*gpu, *vllm-env]
+    profiles: ["vision"]
+    image: vllm/vllm-openai:v0.29.0
+    ipc: host
+    command: >-
+      /models/Qwen3-VL-2B-Instruct
+      --served-model-name Qwen/Qwen3-VL-2B-Instruct
+      --gpu-memory-utilization 0.75
+      --max-model-len 8192
+      --max-num-seqs 4
+      --limit-mm-per-prompt '{"image":1,"video":0}'
+      --mm-processor-kwargs '{"max_pixels":1003520}'
+    ports: ["8000:8000"]
+    volumes: ["${MODELS_DIR}:/models:ro"]
+
+  image:
+    <<: *gpu
+    profiles: ["image"]
+    image: ghcr.io/leejet/stable-diffusion.cpp:master-cuda
+    entrypoint: ["/sd-server"]
+    command: >-
+      --diffusion-model /models/${IMAGE_DIFFUSION}
+      --vae /models/${IMAGE_VAE}
+      --llm /models/${IMAGE_LLM}
+      --backend te=cpu
+      --flash-attn off,diffusion=on
+      --steps 8 --cfg-scale 1.0 --sampling-method euler
+      --sigmas 1.0,0.978453,0.95418,0.926626,0.89508,0.845148,0.704534,0.414568,0.0
+      -W 768 -H 768
+      --listen-ip 0.0.0.0 --listen-port 8080 -v
+    ports: ["8082:8080"]
+    volumes: ["${MODELS_DIR}:/models:ro"]
+
+  audio:
+    <<: [*gpu, *vllm-env]
+    profiles: ["audio"]
+    image: vllm/vllm-openai:v0.29.0
+    ipc: host
+    command: >-
+      /models/${AUDIO_MODEL_DIR}
+      --served-model-name openai/whisper-large-v3-turbo
+      --gpu-memory-utilization 0.6
+      --max-num-seqs 8
+    ports: ["8001:8000"]
+    volumes: ["${MODELS_DIR}:/models:ro"]
