@@ -5,3 +5,7 @@ models/*
 results/*
 outputs/*mlruns/
 data/audio/
+mlruns/
+outputs/
+__pycache__/
+*.pyc
