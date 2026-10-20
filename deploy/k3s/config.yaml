@@ -1,0 +1,5 @@
+# k3s server configuration, copied to /etc/rancher/k3s/config.yaml.
+# The same file is used by the cloud VM (Terraform user_data) to keep both nodes identical.
+write-kubeconfig-mode: "0644"
+disable:
+  - traefik   # no ingress needed: services are reached with port-forward or NodePort (saves RAM)

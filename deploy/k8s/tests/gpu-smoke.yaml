@@ -1,0 +1,17 @@
+# Checks that a pod reaches the GPU through the nvidia RuntimeClass (no device plugin yet).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gpu-smoke
+spec:
+  restartPolicy: Never
+  runtimeClassName: nvidia
+  containers:
+    - name: cuda
+      image: nvidia/cuda:12.8.1-base-ubuntu24.04
+      command: ["nvidia-smi"]
+      env:
+        - name: NVIDIA_VISIBLE_DEVICES
+          value: all
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: compute,utility
