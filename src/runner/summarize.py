@@ -1,4 +1,4 @@
-"""Aggregate benchmark records (results/bench/<task>/*.json) into a table.
+"""Aggregate benchmark records (results/benchmark/<task>/*.json) into a table.
 
 Rows are the numeric fields of each record's "metrics" and "gpu" sections
 (gpu fields are prefixed with "gpu."). Columns are tags, or individual runs
@@ -23,6 +23,11 @@ from collections import defaultdict
 from pathlib import Path
 
 BENCH_DIR = Path(os.getenv("BENCH_DIR", "results/benchmark"))
+
+LARGE_VALUE = 100.0   # >= 100 -> 1 decimal  (e.g. vram 8192.0)
+MEDIUM_VALUE = 1.0    # >= 1   -> 2 decimals (e.g. latency 1.09)
+SMALL_DECIMALS = 4    # < 1    -> 4 decimals (e.g. rtf 0.0106)
+
 
 
 def load_records(task: str, since: str | None, tags: list[str] | None) -> list[dict]:
@@ -66,13 +71,25 @@ def is_failure(record: dict) -> bool:
     return bool(record.get("error"))
 
 
+def decimals_for(value: float) -> int:
+    """Number of decimals that keeps small values (rtf, energy) readable."""
+    size = abs(value)
+    if size >= LARGE_VALUE:
+        return 1
+    if size >= MEDIUM_VALUE:
+        return 2
+    return SMALL_DECIMALS
+
+
 def format_cell(values: list[float]) -> str:
     if not values:
         return "-"
     mean = statistics.fmean(values)
+    digits = decimals_for(mean)
     if len(values) == 1:
-        return f"{mean:.2f}"
-    return f"{mean:.2f} ±{statistics.stdev(values):.2f}"
+        return f"{mean:.{digits}f}"
+    return f"{mean:.{digits}f} ±{statistics.stdev(values):.{digits}f}"
+
 
 
 def build_rows(groups: dict[str, list[dict]], fields_filter: list[str] | None) -> list[list[str]]:
