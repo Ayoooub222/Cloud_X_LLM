@@ -6,3 +6,4 @@ jsonschema
 mlflow-skinny==3.16.0
 soundfile==0.14.0
 numpy==2.5.4
+librosa

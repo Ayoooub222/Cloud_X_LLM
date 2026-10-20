@@ -51,7 +51,10 @@ services:
   audio:
     <<: [*gpu, *vllm-env]
     profiles: ["audio"]
-    image: vllm/vllm-openai:v0.29.0
+    image: test-project/vllm-audio:v0.29.0
+    build:
+      context: .
+      dockerfile: docker/audio.Dockerfile
     ipc: host
     command: >-
       /models/${AUDIO_MODEL_DIR}

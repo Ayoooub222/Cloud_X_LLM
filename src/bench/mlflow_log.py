@@ -6,6 +6,9 @@ if MLflow fails, a warning is printed and the benchmark goes on.
 from __future__ import annotations
 
 import os
+import contextlib
+import io
+
 from datetime import datetime
 from pathlib import Path
 
@@ -68,7 +71,10 @@ def log_record(record, json_path: Path) -> None:
 
     duration_ms = int((record.gpu.duration_s or 0) * 1000)
     status = "FINISHED" if record.status == "ok" else "FAILED"
-    client.set_terminated(run_id, status=status, end_time=start_ms + duration_ms)
+    # MLflow prints "View run/experiment" links with emojis: hide them
+    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+        client.set_terminated(run_id, status=status, end_time=start_ms + duration_ms)
+
 
 
 def try_log_record(record, json_path: Path) -> None:
