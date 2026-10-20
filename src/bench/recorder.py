@@ -11,6 +11,8 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from src.bench.mlflow_log import try_log_record   # with the other imports
+
 
 from pydantic import BaseModel, Field
 
@@ -159,4 +161,6 @@ class BenchRecord(BaseModel):
         file_time = datetime.strptime(self.timestamp, TIMESTAMP_FORMAT).strftime("%Y-%m-%d_%H-%M-%S")
         path = folder / f"{file_time}_{self.task}_{self.run_id}.json"
         path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
+        try_log_record(self, path)  # optional MLflow copy, never breaks the benchmark
+
         return path

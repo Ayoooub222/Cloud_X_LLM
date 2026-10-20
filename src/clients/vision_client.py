@@ -5,7 +5,7 @@ import base64
 import json
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import pymupdf
 from openai import OpenAI
 
 from src.utils.loader import Loader
@@ -22,7 +22,7 @@ def load_schema(schema_file: str | Path) -> dict:
 def pdf_to_pages(pdf_path: str | Path, dpi: int = 100) -> list[dict]:
     """Render each PDF page as PNG. Return [{"b64": ..., "width": ..., "height": ...}]."""
     pages = []
-    with fitz.open(pdf_path) as doc:
+    with pymupdf.open(pdf_path) as doc:
         for page in doc:
             pix = page.get_pixmap(dpi=dpi)
             pages.append({

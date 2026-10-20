@@ -3,4 +3,5 @@
 .env*
 models/*
 results/*
-outputs/*
+outputs/*mlruns/
+data/audio/

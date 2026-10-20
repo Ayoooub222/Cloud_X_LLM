@@ -1,3 +1,8 @@
+"""Pydantic models of the vision extraction (French garage quotes/invoices, vehicle inspection reports).
+
+Class names, field names and enum values are DATA: they generate the JSON schema sent to the model.
+Do not translate or rename them (it would change the prompt, so the measured load).
+"""
 from __future__ import annotations
 
 from collections import Counter
@@ -7,7 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class _Strict(BaseModel):
-    model_config = ConfigDict(extra="forbid")   # additionalProperties: false -> grammaire plus serrée
+    # additionalProperties: false -> tighter grammar for constrained decoding
+    model_config = ConfigDict(extra="forbid")
 
 
 class TypeDocument(str, Enum):
@@ -43,7 +49,7 @@ class ResultatCT(str, Enum):
     NON_APPLICABLE = "NON_APPLICABLE"
 
 
-class Emetteur(_Strict):          # garage ou centre de contrôle technique
+class Emetteur(_Strict):  # garage or vehicle inspection centre
     nom: str | None
     adresse: str | None
     code_postal: str | None
@@ -123,46 +129,60 @@ class ExtractionPage(_Strict):
     mentions: Mentions
 
 
-# ---------- Fusion multi-pages (déterministe) ----------
-_RANG_LISIBILITE = {Lisibilite.BONNE: 0, Lisibilite.MOYENNE: 1, Lisibilite.MAUVAISE: 2}
+# ---------- Multi-page merge (deterministic) ----------
+READABILITY_RANK = {Lisibilite.BONNE: 0, Lisibilite.MOYENNE: 1, Lisibilite.MAUVAISE: 2}
 
 
-def _fusion_champs(objs: list[BaseModel]) -> BaseModel:
-    cls = type(objs[0])
+def merge_fields(objects: list[BaseModel]) -> BaseModel:
+    """Merge the same sub-object found on several pages.
+
+    Boolean fields: True if True on any page. Other fields: first non-empty value.
+    """
+    cls = type(objects[0])
     data = {}
-    for nom in cls.model_fields:
-        vals = [getattr(o, nom) for o in objs]
-        data[nom] = any(vals) if all(isinstance(v, bool) for v in vals) \
-            else next((v for v in vals if v not in (None, "")), None)
+    for field_name in cls.model_fields:
+        values = [getattr(obj, field_name) for obj in objects]
+        if all(isinstance(v, bool) for v in values):
+            data[field_name] = any(values)
+        else:
+            data[field_name] = next((v for v in values if v not in (None, "")), None)
     return cls(**data)
 
 
-def fusionner_pages(pages: list[ExtractionPage]) -> ExtractionPage:
+def unique_defects(pages: list[ExtractionPage]) -> list[DefautCT]:
+    """All inspection defects of the document, without duplicates (same code and severity)."""
+    defects, seen = [], set()
+    for page in pages:
+        for defect in page.defauts_ct:
+            key = (defect.code.strip(), defect.gravite)
+            if key not in seen:
+                seen.add(key)
+                defects.append(defect)
+    return defects
+
+
+def merge_pages(pages: list[ExtractionPage]) -> ExtractionPage:
+    """Merge the per-page extractions of one document into a single ExtractionPage."""
     if not pages:
-        raise ValueError("Aucune page extraite")
+        raise ValueError("No page extracted")
     if len(pages) == 1:
         return pages[0]
-    types = [p.type_document for p in pages if p.type_document is not TypeDocument.AUTRE]
-    resultats = [p.resultat_ct for p in pages if p.resultat_ct is not ResultatCT.NON_APPLICABLE]
-    defauts, vus = [], set()
-    for p in pages:
-        for d in p.defauts_ct:
-            cle = (d.code.strip(), d.gravite)
-            if cle not in vus:
-                vus.add(cle)
-                defauts.append(d)
-    # model_construct : la concaténation peut dépasser les maxItems par page
+
+    doc_types = [p.type_document for p in pages if p.type_document is not TypeDocument.AUTRE]
+    ct_results = [p.resultat_ct for p in pages if p.resultat_ct is not ResultatCT.NON_APPLICABLE]
+
+    # model_construct skips validation: merged lists may exceed the per-page max_length
     return ExtractionPage.model_construct(
-        type_document=Counter(types).most_common(1)[0][0] if types else TypeDocument.AUTRE,
-        lisibilite=max((p.lisibilite for p in pages), key=_RANG_LISIBILITE.__getitem__),
-        emetteur=_fusion_champs([p.emetteur for p in pages]),
-        vehicule=_fusion_champs([p.vehicule for p in pages]),
-        en_tete=_fusion_champs([p.en_tete for p in pages]),
-        pieces=[l for p in pages for l in p.pieces],
-        main_oeuvre=[l for p in pages for l in p.main_oeuvre],
-        frais_divers=[l for p in pages for l in p.frais_divers],
-        resultat_ct=resultats[0] if resultats else ResultatCT.NON_APPLICABLE,
-        defauts_ct=defauts,
-        totaux=_fusion_champs([p.totaux for p in reversed(pages)]),   # les totaux sont en dernière page
-        mentions=_fusion_champs([p.mentions for p in pages]),
+        type_document=Counter(doc_types).most_common(1)[0][0] if doc_types else TypeDocument.AUTRE,
+        lisibilite=max((p.lisibilite for p in pages), key=READABILITY_RANK.__getitem__),  # worst page
+        emetteur=merge_fields([p.emetteur for p in pages]),
+        vehicule=merge_fields([p.vehicule for p in pages]),
+        en_tete=merge_fields([p.en_tete for p in pages]),
+        pieces=[line for p in pages for line in p.pieces],
+        main_oeuvre=[line for p in pages for line in p.main_oeuvre],
+        frais_divers=[line for p in pages for line in p.frais_divers],
+        resultat_ct=ct_results[0] if ct_results else ResultatCT.NON_APPLICABLE,
+        defauts_ct=unique_defects(pages),
+        totaux=merge_fields([p.totaux for p in reversed(pages)]),  # totals are usually on the last page
+        mentions=merge_fields([p.mentions for p in pages]),
     )

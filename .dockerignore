@@ -6,3 +6,4 @@ outputs/
 *.png
 .env
 .cache/
+mlruns/

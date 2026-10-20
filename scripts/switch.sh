@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Usage: bash scripts/switch.sh <vision|image|audio>
-# Stop every GPU profile, start the requested one, then follow its logs.
-# Ctrl+C only stops following the logs: the container keeps running.
+# Stop the GPU services only (MLflow keeps running), start the requested one, follow its logs.
 set -euo pipefail
 
 PROFILE="${1:-}"
@@ -10,10 +9,11 @@ case "$PROFILE" in
   *) echo "Usage: $0 <vision|image|audio>" >&2; exit 1 ;;
 esac
 
-cd "$(dirname "$0")/.."  # project root (where docker-compose.yml is)
+cd "$(dirname "$0")/.."
+ALL_GPU="--profile vision --profile image --profile audio"
 
-echo "Stopping all GPU profiles..."
-docker compose --profile vision --profile image --profile audio down
+echo "Stopping GPU services..."
+docker compose $ALL_GPU rm --stop --force vision image audio
 
 echo "Starting profile '$PROFILE'..."
 docker compose --profile "$PROFILE" up -d
