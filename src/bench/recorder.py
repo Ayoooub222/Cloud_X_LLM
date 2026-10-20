@@ -1,4 +1,4 @@
-"""Enregistrement structuré des runs de benchmark : 1 run = 1 fichier JSON dans results/benchmark/<task>/."""
+"""Structured benchmark records: one run = one JSON file in results/benchmark/<task>/."""
 from __future__ import annotations
 
 import os
@@ -15,118 +15,136 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 RESULTS_DIR = Path(os.getenv("BENCH_DIR", "results/benchmark"))
+DEFAULT_ENV_LABEL = "local-wsl2-rtx3070laptop"
+TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
+NVIDIA_QUERY = "name,memory.total,memory.used,utilization.gpu,power.draw"
 
 
 # ---------- GPU ----------
 class GpuStats(BaseModel):
+    """GPU summary of one run (values come from nvidia-smi)."""
     name: str | None = None
     vram_total_mib: float | None = None
     vram_peak_mib: float | None = None
     util_avg_pct: float | None = None
     power_avg_w: float | None = None
-    energy_wh: float | None = None      # power_avg × durée → base du coût électrique self-hosted
+    energy_wh: float | None = None  # power_avg_w * duration -> electricity cost of self-hosting
     duration_s: float | None = None
     samples: int = 0
 
 
-def _num(x: str) -> float | None:
+def to_float(text: str) -> float | None:
+    """Convert a nvidia-smi value to float ('[N/A]' on some laptop GPUs -> None)."""
     try:
-        return float(x.strip())
-    except ValueError:                  # "[N/A]" sur certains GPU laptop
+        return float(text.strip())
+    except ValueError:
         return None
 
 
-class GpuSampler:
-    """Equivalent of `nvidia-smi -l 1`. Usage : with GpuSampler() as g: ... ; g.stats()"""
+def mean(values: list[float]) -> float:
+    return sum(values) / len(values)
 
-    QUERY = "name,memory.total,memory.used,utilization.gpu,power.draw"
+
+class GpuSampler:
+    """Poll nvidia-smi every `interval_s` seconds in a background thread.
+
+    Usage:
+        sampler = GpuSampler()
+        with sampler:
+            run_the_workload()
+        stats = sampler.stats()
+    """
 
     def __init__(self, interval_s: float = 1.0):
         self.interval_s = interval_s
-        self._rows: list[tuple] = []
-        self._name: str | None = None
+        self.gpu_name: str | None = None
+        self.samples: list[dict] = []
         self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._run, daemon=True)
-        self._t0 = self._t1 = 0.0
+        self._thread = threading.Thread(target=self._loop, daemon=True)
+        self._start = 0.0
+        self._end = 0.0
 
-    def _query(self) -> tuple | None:
+    def read_once(self) -> dict | None:
+        """Run nvidia-smi once. Return one sample, or None if the call failed."""
+        cmd = ["nvidia-smi", f"--query-gpu={NVIDIA_QUERY}", "--format=csv,noheader,nounits"]
         try:
-            out = subprocess.run(
-                ["nvidia-smi", f"--query-gpu={self.QUERY}", "--format=csv,noheader,nounits"],
-                capture_output=True, text=True, timeout=5, check=True,
-            ).stdout.splitlines()[0]
-        except (OSError, subprocess.SubprocessError, IndexError):
+            output = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=True).stdout
+            name, total, used, util, power = output.splitlines()[0].split(",")
+        except (OSError, subprocess.SubprocessError, IndexError, ValueError):
             return None
-        name, total, used, util, power = out.split(",")
-        self._name = name.strip()
-        return _num(total), _num(used), _num(util), _num(power)
+        self.gpu_name = name.strip()
+        return {"total": to_float(total), "used": to_float(used),
+                "util": to_float(util), "power": to_float(power)}
 
-    def _run(self) -> None:
+    def _loop(self) -> None:
         while not self._stop.is_set():
-            if (row := self._query()) is not None:
-                self._rows.append(row)
+            sample = self.read_once()
+            if sample is not None:
+                self.samples.append(sample)
             self._stop.wait(self.interval_s)
 
     def __enter__(self) -> "GpuSampler":
-        self._t0 = time.perf_counter()
+        self._start = time.perf_counter()
         self._thread.start()
         return self
 
     def __exit__(self, *exc) -> None:
         self._stop.set()
         self._thread.join(timeout=10)
-        self._t1 = time.perf_counter()
+        self._end = time.perf_counter()
+
+    def values(self, key: str) -> list[float]:
+        """All non-empty values of one column (total, used, util or power)."""
+        return [s[key] for s in self.samples if s[key] is not None]
 
     def stats(self) -> GpuStats:
-        if not self._rows:
+        if not self.samples:
             return GpuStats()
-
-        def col(i: int) -> list[float]:
-            return [r[i] for r in self._rows if r[i] is not None]
-
-        used, util, power = col(1), col(2), col(3)
-        duration = self._t1 - self._t0
-        p_avg = sum(power) / len(power) if power else None
+        duration = self._end - self._start
+        total, used = self.values("total"), self.values("used")
+        util, power = self.values("util"), self.values("power")
         return GpuStats(
-            name=self._name,
-            vram_total_mib=col(0)[0] if col(0) else None,
+            name=self.gpu_name,
+            vram_total_mib=total[0] if total else None,
             vram_peak_mib=max(used) if used else None,
-            util_avg_pct=round(sum(util) / len(util), 1) if util else None,
-            power_avg_w=round(p_avg, 1) if p_avg is not None else None,
-            energy_wh=round(p_avg * duration / 3600, 4) if p_avg is not None else None,
+            util_avg_pct=round(mean(util), 1) if util else None,
+            power_avg_w=round(mean(power), 1) if power else None,
+            energy_wh=round(mean(power) * duration / 3600, 4) if power else None,
             duration_s=round(duration, 2),
-            samples=len(self._rows),
+            samples=len(self.samples),
         )
 
 
 # ---------- Record ----------
-def _git_commit() -> str | None:
+def git_commit() -> str | None:
+    """Short hash of the current commit (to know which code produced a result)."""
     try:
-        return subprocess.run(["git", "rev-parse", "--short", "HEAD"],
-                              capture_output=True, text=True, timeout=5, check=True).stdout.strip()
+        cmd = ["git", "rev-parse", "--short", "HEAD"]
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=True).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         return None
 
 
 def env_info() -> dict[str, Any]:
     return {
-        "label": os.getenv("BENCH_ENV", "local-wsl2-rtx3070laptop"),
+        "label": os.getenv("BENCH_ENV", DEFAULT_ENV_LABEL),
         "host": socket.gethostname(),
         "platform": platform.platform(),
         "python": platform.python_version(),
-        "git_commit": _git_commit(),
+        "git_commit": git_commit(),
     }
 
 
 class BenchRecord(BaseModel):
+    """One benchmark run. Failed runs are saved too (status='error')."""
     run_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:6])
-    timestamp: str = Field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    timestamp: str = Field(default_factory=lambda: datetime.now().strftime(TIMESTAMP_FORMAT))
     timezone: str = Field(default_factory=lambda: datetime.now().astimezone().tzname() or "")
-    task: str                       # "image" | "audio" | "vision"
-    backend: str                    # "sdcpp" | "vllm" | ...
+    task: str                    # "image" | "audio" | "vision"
+    backend: str                 # "sdcpp" | "vllm" | ...
     model: str
-    tag: str | None = None          # ex: "warmup", "testA-notiling"
-    status: str = "ok"              # "ok" | "error"
+    tag: str | None = None       # e.g. "warmup", "testA-notiling"
+    status: str = "ok"           # "ok" | "error"
     error: str | None = None
     env: dict[str, Any] = Field(default_factory=env_info)
     params: dict[str, Any] = Field(default_factory=dict)
@@ -135,9 +153,10 @@ class BenchRecord(BaseModel):
     outputs: list[str] = Field(default_factory=list)
 
     def save(self, root: Path = RESULTS_DIR) -> Path:
-        d = root / self.task
-        d.mkdir(parents=True, exist_ok=True)
-        ts = datetime.strptime(self.timestamp, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d_%H-%M-%S")
-        path = d / f"{ts}_{self.task}_{self.run_id}.json"
+        """Write <root>/<task>/<YYYY-MM-DD_HH-MM-SS>_<task>_<run_id>.json and return its path."""
+        folder = root / self.task
+        folder.mkdir(parents=True, exist_ok=True)
+        file_time = datetime.strptime(self.timestamp, TIMESTAMP_FORMAT).strftime("%Y-%m-%d_%H-%M-%S")
+        path = folder / f"{file_time}_{self.task}_{self.run_id}.json"
         path.write_text(self.model_dump_json(indent=2), encoding="utf-8")
         return path

@@ -1,150 +1,173 @@
-"""Client sd-server (stable-diffusion.cpp) pour Qwen-Image-2.1-Turbo, via l'API native async /sdcpp/v1."""
+"""Client for sd-server (stable-diffusion.cpp) running Qwen-Image-2.1-Turbo.
+
+Native async API:
+    POST /sdcpp/v1/img_gen    -> returns a job id
+    GET  /sdcpp/v1/jobs/{id}  -> polled until the job is finished
+"""
 from __future__ import annotations
 
 import base64
 import os
-import sys
-from pathlib import Path
-
-sys.path.append(str(Path(__file__).resolve().parents[2]))
 import time
-
+from pathlib import Path
 
 import httpx
 from pydantic import BaseModel, Field
 
+DEFAULT_URL = "http://localhost:8082"
+# Sigmas for the Turbo model: 9 sigmas -> 8 sampling steps
 TURBO_SIGMAS = [1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568, 0.0]
-_TERMINAL = {"completed", "failed", "cancelled"}
+FINISHED_STATUSES = {"completed", "failed", "cancelled"}
 
 
 class ImageGenRequest(BaseModel):
-    vae_tiling: bool = False
+    """Parameters of one generation, validated before being sent."""
+    vae_tiling: bool = False  # decode tile by tile: less VRAM, but slower
     prompt: str = Field(min_length=1)
     negative_prompt: str = ""
     width: int = Field(768, ge=256, le=1536, multiple_of=64)
     height: int = Field(768, ge=256, le=1536, multiple_of=64)
-    cfg_scale: float = Field(1.0, ge=0.0, le=15.0)  # Turbo = 1.0
+    cfg_scale: float = Field(1.0, ge=0.0, le=15.0)  # Turbo model: keep 1.0
     seed: int = -1
     batch_count: int = Field(1, ge=1, le=4)
     sigmas: list[float] = Field(default_factory=lambda: list(TURBO_SIGMAS), min_length=2)
 
     @property
     def steps(self) -> int:
-        return len(self.sigmas) - 1  # 9 sigmas -> 8 steps
+        return len(self.sigmas) - 1
 
 
 class ImageGenResult(BaseModel):
     images_b64: list[str]
-    latency_s: float                 # vu du client : file + génération + réseau
-    gen_time_s: float | None = None  # côté serveur (completed - started) = temps GPU "facturable"
-    queue_time_s: float | None = None
+    latency_s: float                   # client side: queue + generation + network
+    gen_time_s: float | None = None    # server side (completed - started), 1 s resolution
+    queue_time_s: float | None = None  # server side (started - created)
     request: ImageGenRequest
 
-    def save(self, out_dir: str | Path, stem: str = "img" , date: str = time.strftime("%Y-%m-%d %H:%M:%S")) -> list[Path]:
-        out = Path(out_dir)
-        out.mkdir(parents=True, exist_ok=True)
+    def save(self, out_dir: str | Path, stem: str = "img") -> list[Path]:
+        """Write the images as <out_dir>/<stem>_<i>.png and return their paths."""
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
         paths = []
         for i, b64 in enumerate(self.images_b64):
-            p = out / f"{stem}_{date}_{i}.png"
-            p.write_bytes(base64.b64decode(b64))
-            paths.append(p)
+            path = out_dir / f"{stem}_{i}.png"
+            path.write_bytes(base64.b64decode(b64))
+            paths.append(path)
         return paths
+
+
+def build_payload(req: ImageGenRequest) -> dict:
+    """Convert a request into the JSON body expected by sd-server."""
+    return {
+        "prompt": req.prompt,
+        "negative_prompt": req.negative_prompt,
+        "width": req.width,
+        "height": req.height,
+        "seed": req.seed,
+        "batch_count": req.batch_count,
+        "sample_params": {
+            "sample_method": "euler",
+            "sample_steps": req.steps,
+            "custom_sigmas": req.sigmas,
+            "guidance": {"txt_cfg": req.cfg_scale},
+        },
+        "vae_tiling_params": {"enabled": req.vae_tiling},
+        "output_format": "png",
+    }
+
+
+def raise_for_error(response: httpx.Response) -> None:
+    if response.is_error:
+        raise RuntimeError(f"HTTP {response.status_code} {response.request.url}: {response.text[:500]}")
+
+
+def extract_images(job: dict) -> list[str]:
+    """Return the base64 images of a finished job.
+
+    The JSON layout may differ between sd-server versions, so several keys are tried.
+    """
+    result = job.get("result") or {}
+    items = result.get("images") or result.get("data") or job.get("images") or []
+    images = []
+    for item in items:
+        if isinstance(item, str):
+            images.append(item)
+        elif isinstance(item, dict):
+            b64 = item.get("b64_json") or item.get("data") or item.get("image")
+            if b64:
+                images.append(b64)
+    return images
+
+
+def seconds_between(start, end) -> float | None:
+    """end - start if both server timestamps are numbers, else None."""
+    if isinstance(start, (int, float)) and isinstance(end, (int, float)):
+        return end - start
+    return None
 
 
 class SdCppImageClient:
     def __init__(self, base_url: str | None = None,
                  timeout_s: float = 600.0, poll_interval_s: float = 0.5):
-        base_url = base_url or os.getenv("IMAGE_API_URL", "http://localhost:8082")
-        self._client = httpx.Client(base_url=base_url, timeout=30.0)
-        self._timeout_s = timeout_s
-        self._poll = poll_interval_s
+        base_url = base_url or os.getenv("IMAGE_API_URL", DEFAULT_URL)
+        self.http = httpx.Client(base_url=base_url, timeout=30.0)
+        self.timeout_s = timeout_s
+        self.poll_interval_s = poll_interval_s
 
     def health(self) -> bool:
         try:
-            return self._client.get("/sdcpp/v1/capabilities").status_code == 200
+            return self.http.get("/sdcpp/v1/capabilities").status_code == 200
         except httpx.HTTPError:
             return False
 
-    @staticmethod
-    def _payload(req: ImageGenRequest) -> dict:
-        return {
-            "prompt": req.prompt,
-            "negative_prompt": req.negative_prompt,
-            "width": req.width,
-            "height": req.height,
-            "seed": req.seed,
-            "batch_count": req.batch_count,
-            "sample_params": {
-                "sample_method": "euler",
-                "sample_steps": req.steps,
-                "custom_sigmas": req.sigmas,
-                "guidance": {"txt_cfg": req.cfg_scale},
-            },
-            "vae_tiling_params": {"enabled": req.vae_tiling},
-            "output_format": "png",
-        }
-
-    @staticmethod
-    def _check(r: httpx.Response) -> None:
-        if r.is_error:
-            raise RuntimeError(f"HTTP {r.status_code} {r.request.url}: {r.text[:500]}")
-
-    @staticmethod
-    def _extract_images(job: dict) -> list[str]:
-        result = job.get("result") or {}
-        items = result.get("images") or result.get("data") or job.get("images") or []
-        out = []
-        for im in items:
-            if isinstance(im, str):
-                out.append(im)
-            elif isinstance(im, dict):
-                b64 = im.get("b64_json") or im.get("data") or im.get("image")
-                if b64:
-                    out.append(b64)
-        return out
-
     def generate(self, req: ImageGenRequest) -> ImageGenResult:
-        t0 = time.perf_counter()
-        r = self._client.post("/sdcpp/v1/img_gen", json=self._payload(req))
-        self._check(r)
-        body = r.json()
+        """Submit a job, wait until it is finished, return the images and timings."""
+        start = time.perf_counter()
+        response = self.http.post("/sdcpp/v1/img_gen", json=build_payload(req))
+        raise_for_error(response)
+        body = response.json()
         job_id = body.get("id") or body.get("job_id")
         if not job_id:
-            raise RuntimeError(f"pas d'id de job dans la réponse: {body}")
+            raise RuntimeError(f"No job id in response: {body}")
 
-        while True:
-            j = self._client.get(f"/sdcpp/v1/jobs/{job_id}")
-            self._check(j)
-            job = j.json()
-            if job.get("status") in _TERMINAL:
-                break
-            if time.perf_counter() - t0 > self._timeout_s:
-                try:
-                    self._client.post(f"/sdcpp/v1/jobs/{job_id}/cancel")
-                except httpx.HTTPError:
-                    pass
-                raise TimeoutError(f"job {job_id} > {self._timeout_s}s")
-            time.sleep(self._poll)
-        latency = time.perf_counter() - t0
+        job = self.wait_for_job(job_id, start)
+        latency = time.perf_counter() - start
 
         if job["status"] != "completed":
-            raise RuntimeError(f"job {job_id} {job['status']}: {job.get('error')}")
-        images = self._extract_images(job)
+            raise RuntimeError(f"Job {job_id} {job['status']}: {job.get('error')}")
+        images = extract_images(job)
         if not images:
-            raise RuntimeError(f"job {job_id} terminé sans image. Clés reçues: {list(job.keys())}")
+            raise RuntimeError(f"Job {job_id} finished without image. Keys received: {list(job.keys())}")
 
-        created, started, completed = job.get("created"), job.get("started"), job.get("completed")
-        num = (int, float)
         return ImageGenResult(
             images_b64=images,
             latency_s=latency,
-            gen_time_s=(completed - started) if isinstance(started, num) and isinstance(completed, num) else None,
-            queue_time_s=(started - created) if isinstance(started, num) and isinstance(created, num) else None,
+            gen_time_s=seconds_between(job.get("started"), job.get("completed")),
+            queue_time_s=seconds_between(job.get("created"), job.get("started")),
             request=req,
         )
 
+    def wait_for_job(self, job_id: str, start: float) -> dict:
+        """Poll the job until it is finished. Cancel it and raise on timeout."""
+        while True:
+            response = self.http.get(f"/sdcpp/v1/jobs/{job_id}")
+            raise_for_error(response)
+            job = response.json()
+            if job.get("status") in FINISHED_STATUSES:
+                return job
+            if time.perf_counter() - start > self.timeout_s:
+                self.cancel(job_id)
+                raise TimeoutError(f"Job {job_id} took more than {self.timeout_s}s")
+            time.sleep(self.poll_interval_s)
+
+    def cancel(self, job_id: str) -> None:
+        try:
+            self.http.post(f"/sdcpp/v1/jobs/{job_id}/cancel")
+        except httpx.HTTPError:
+            pass  # best effort: the timeout error is raised anyway
+
     def close(self) -> None:
-        self._client.close()
+        self.http.close()
 
     def __enter__(self):
         return self

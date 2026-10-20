@@ -75,7 +75,7 @@ def main() -> int:
         pdf_path=str(args.singlepdf),
         schema_response=args.schema_response,
     )
-    try:  # échauffement réseau + config, HORS mesure
+    try: 
         client.resolve_model()
         hp = client.hyperparameters()
     except Exception as e:
