@@ -1,0 +1,48 @@
+{
+  "run_id": "7c1892",
+  "timestamp": "2026-10-19 22:16:27",
+  "timezone": "+07",
+  "task": "image",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "testA-tiling",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "4a85577"
+  },
+  "params": {
+    "vae_tiling": true,
+    "prompt": "a bowl of ramen on a wooden table",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 768,
+    "cfg_scale": 1.0,
+    "seed": 42,
+    "batch_count": 1,
+    "steps": 8
+  },
+  "metrics": {
+    "latency_s": 24.7,
+    "gen_time_s": 25.0,
+    "queue_time_s": 0.0,
+    "images": 1
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 5393.0,
+    "util_avg_pct": 82.1,
+    "power_avg_w": 62.6,
+    "energy_wh": 0.4293,
+    "duration_s": 24.71,
+    "samples": 24
+  },
+  "outputs": [
+    "outputs/img_1792423012_2026-10-19 22:16:27_0.png"
+  ]
+}

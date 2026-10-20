@@ -1,0 +1,54 @@
+{
+  "run_id": "383944",
+  "timestamp": "2026-10-20 08:48:11",
+  "timezone": "+07",
+  "task": "image",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "testB-notiling",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "9609f4c"
+  },
+  "params": {
+    "vae_tiling": false,
+    "prompt": "a lighthouse on a cliff under a stormy sky",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 768,
+    "cfg_scale": 1.0,
+    "seed": 42,
+    "batch_count": 1,
+    "steps": 8
+  },
+  "metrics": {
+    "latency_s": 48.23,
+    "gen_time_s": 13.0,
+    "queue_time_s": 35.0,
+    "images": 1,
+    "encode_s": 0.0,
+    "sampling_s": 11.64,
+    "vae_decode_s": 1.7,
+    "server_total_s": 13.35,
+    "weights_load_s": 0.8,
+    "cpu_share_pct": 0.0
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6663.0,
+    "util_avg_pct": 93.3,
+    "power_avg_w": 78.7,
+    "energy_wh": 1.0539,
+    "duration_s": 48.23,
+    "samples": 47
+  },
+  "outputs": [
+    "outputs/image/img_383944_0.png"
+  ]
+}

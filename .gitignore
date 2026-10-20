@@ -9,3 +9,4 @@ mlruns/
 outputs/
 __pycache__/
 *.pyc
+!results/benchmark/

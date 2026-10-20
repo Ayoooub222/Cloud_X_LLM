@@ -1,0 +1,48 @@
+{
+  "run_id": "9227fc",
+  "timestamp": "2026-10-19 22:15:44",
+  "timezone": "+07",
+  "task": "image",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "testA-notiling",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "4a85577"
+  },
+  "params": {
+    "vae_tiling": false,
+    "prompt": "a red fox in the snow, photo",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 768,
+    "cfg_scale": 1.0,
+    "seed": 42,
+    "batch_count": 1,
+    "steps": 8
+  },
+  "metrics": {
+    "latency_s": 23.18,
+    "gen_time_s": 23.0,
+    "queue_time_s": 0.0,
+    "images": 1
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6611.0,
+    "util_avg_pct": 67.8,
+    "power_avg_w": 58.7,
+    "energy_wh": 0.3782,
+    "duration_s": 23.19,
+    "samples": 22
+  },
+  "outputs": [
+    "outputs/img_1792422967_2026-10-19 22:15:44_0.png"
+  ]
+}
