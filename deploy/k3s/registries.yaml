@@ -1,0 +1,5 @@
+# containerd mirror for the local registry started by scripts/registry.sh.
+mirrors:
+  "localhost:5001":
+    endpoint:
+      - "http://localhost:5001"
