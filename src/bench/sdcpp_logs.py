@@ -1,9 +1,15 @@
-"""Read the per-stage timings of an image generation from the sd-server docker logs."""
+"""Read the per-stage timings of an image generation from the sd-server logs (docker or k3s)."""
 import os
 import re
 import subprocess
+from datetime import datetime, timezone
 
+# "docker" (compose) or "k8s" (k3s)
+LOG_SOURCE = os.getenv("IMAGE_LOG_SOURCE", "docker")
 CONTAINER = os.getenv("IMAGE_CONTAINER", "test-project-image-1")
+K8S_NAMESPACE = os.getenv("K8S_NAMESPACE", "ai-models")
+K8S_TARGET = os.getenv("IMAGE_K8S_TARGET", "deploy/image")
+LOGS_TIMEOUT_S = 15
 
 # metric name -> regex matching the sd-server log line (value in seconds)
 STAGE_PATTERNS = {
@@ -18,14 +24,30 @@ WEIGHTS_LOAD_PATTERN = r"loading tensors completed, taking ([\d.]+)s"
 CACHE_HIT_LINE = "conditioning cache hit"
 
 
+def docker_logs_cmd(since_unix: float) -> list[str]:
+    """Build the docker logs command for the compose container."""
+    return ["docker", "logs", "--since", str(int(since_unix)), CONTAINER]
+
+
+def k8s_logs_cmd(since_unix: float) -> list[str]:
+    """Build the kubectl logs command for the image deployment in k3s."""
+    since = datetime.fromtimestamp(int(since_unix), tz=timezone.utc)
+    since_rfc3339 = since.strftime("%Y-%m-%dT%H:%M:%SZ")
+    return ["kubectl", "-n", K8S_NAMESPACE, "logs", K8S_TARGET, "--since-time", since_rfc3339]
+
+
 def read_logs(since_unix: float) -> str:
-    """Return the container logs written since `since_unix` (empty string on failure)."""
-    cmd = ["docker", "logs", "--since", str(int(since_unix)), CONTAINER]
+    """Return the sd-server logs written since `since_unix` (empty string on failure)."""
+    if LOG_SOURCE == "k8s":
+        cmd = k8s_logs_cmd(since_unix)
+    else:
+        cmd = docker_logs_cmd(since_unix)
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=LOGS_TIMEOUT_S)
     except (OSError, subprocess.SubprocessError):
         return ""
-    return result.stdout + result.stderr  # sd-server writes its logs to stderr
+    # docker splits stdout/stderr (sd-server logs to stderr); kubectl merges both into stdout
+    return result.stdout + result.stderr
 
 
 def sdcpp_stage_times(since_unix: float) -> dict[str, float]:
