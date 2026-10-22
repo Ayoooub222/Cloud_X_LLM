@@ -1,4 +1,5 @@
-{{- if .Values.mlflow.enabled }}
+# The PVC is always rendered (even when mlflow is disabled) so that Helm never deletes it,
+# and "keep" protects it from "helm uninstall". local-path uses reclaimPolicy Delete.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -6,6 +7,8 @@ metadata:
   labels:
     app.kubernetes.io/name: mlflow
     app.kubernetes.io/part-of: ai-models
+  annotations:
+    helm.sh/resource-policy: keep
 spec:
   accessModes:
     - ReadWriteOnce
@@ -13,6 +16,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.mlflow.storageSize }}
+{{- if .Values.mlflow.enabled }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,6 +49,9 @@ spec:
             - 0.0.0.0
             - --port
             - {{ .Values.mlflow.port | quote }}
+            # One worker is enough for a single user and saves RAM for the image model.
+            - --workers
+            - {{ .Values.mlflow.workers | default 1 | quote }}
             - --backend-store-uri
             - sqlite:////mlflow/mlflow.db
             - --artifacts-destination
