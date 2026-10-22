@@ -1,0 +1,19 @@
+{{- range $name, $m := .Values.models }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: ai-models
+spec:
+  # k3s ServiceLB exposes this port on the host, like "ports:" in compose.
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+  ports:
+    - name: http
+      port: {{ $m.servicePort }}
+      targetPort: http
+{{- end }}

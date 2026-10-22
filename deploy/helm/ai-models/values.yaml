@@ -1,0 +1,103 @@
+# Registry used for model images (local registry; ECR or GHCR on AWS).
+registry: localhost:5001
+
+# Absolute host path of the model weights, set by scripts/switch_k8s.sh from .env.
+modelsDir: ""
+
+# Size of the in-memory /dev/shm volume (replaces "ipc: host" from compose).
+shmSize: 2Gi
+
+# One Deployment and one Service per model. Only one model has replicas: 1
+# at a time (single 8 GB GPU); scripts/switch_k8s.sh sets the replicas.
+models:
+  vision:
+    replicas: 0
+    repository: vllm/vllm-openai
+    tag: v0.29.0
+    containerPort: 8000
+    servicePort: 8000
+    healthPath: /health
+    env:
+      HF_HUB_OFFLINE: "1"
+      VLLM_USE_V2_MODEL_RUNNER: "0"
+      # WSL2: large contiguous CUDA allocations can fail; allocate in segments.
+      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
+
+    args:
+      - /models/Qwen3-VL-2B-Instruct
+      - --served-model-name
+      - Qwen/Qwen3-VL-2B-Instruct
+      - --gpu-memory-utilization
+      - "0.75"
+      - --max-model-len
+      - "8192"
+      - --max-num-seqs
+      - "4"
+      - --limit-mm-per-prompt
+      - '{"image":1,"video":0}'
+      - --mm-processor-kwargs
+      - '{"max_pixels":1003520}'
+
+  image:
+    replicas: 0
+    repository: ghcr.io/leejet/stable-diffusion.cpp
+    tag: master-cuda
+    containerPort: 8080
+    servicePort: 8082
+    healthPath: /sdcpp/v1/capabilities
+    command:
+      - /sd-server
+    env: {}
+    args:
+      - --diffusion-model
+      - /models/$(IMAGE_DIFFUSION)
+      - --vae
+      - /models/$(IMAGE_VAE)
+      - --llm
+      - /models/$(IMAGE_LLM)
+      - --backend
+      - te=cpu
+      - --flash-attn
+      - off,diffusion=on
+      - --steps
+      - "8"
+      - --cfg-scale
+      - "1.0"
+      - --sampling-method
+      - euler
+      - --sigmas
+      - 1.0,0.978453,0.95418,0.926626,0.89508,0.845148,0.704534,0.414568,0.0
+      - -W
+      - "768"
+      - -H
+      - "768"
+      - --listen-ip
+      - 0.0.0.0
+      - --listen-port
+      - "8080"
+      - -v
+
+  audio:
+    replicas: 0
+    repository: test-project/vllm-audio
+    tag: v0.29.0
+    containerPort: 8000
+    servicePort: 8001
+    healthPath: /health
+    env:
+      HF_HUB_OFFLINE: "1"
+      VLLM_USE_V2_MODEL_RUNNER: "0"
+    args:
+      - /models/$(AUDIO_MODEL_DIR)
+      - --served-model-name
+      - openai/whisper-large-v3-turbo
+      - --gpu-memory-utilization
+      - "0.6"
+      - --max-num-seqs
+      - "8"
+
+mlflow:
+  enabled: false
+  image: ghcr.io/mlflow/mlflow:v3.16.0
+  port: 5000
+  storageSize: 5Gi
