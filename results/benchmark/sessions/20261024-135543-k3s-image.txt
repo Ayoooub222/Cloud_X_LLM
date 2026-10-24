@@ -1,0 +1,8 @@
+[start] 2026-10-24 13:55:43 env=local-k3s-rtx3070laptop suite=image cold_runs=0
+610.62, P8, 60, 15.72 W, [N/A], 210 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=10859
+[end] 2026-10-24 13:58:11 env=local-k3s-rtx3070laptop suite=image cold_runs=0
+610.62, P0, 84, 66.81 W, [N/A], 1710 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=4615

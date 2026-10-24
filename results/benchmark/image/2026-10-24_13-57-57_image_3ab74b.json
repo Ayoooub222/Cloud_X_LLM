@@ -1,0 +1,55 @@
+{
+  "run_id": "3ab74b",
+  "timestamp": "2026-10-24 13:57:57",
+  "timezone": "+07",
+  "task": "image",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "image-new",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-k3s-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "8ca7a83"
+  },
+  "params": {
+    "vae_tiling": false,
+    "prompt": "an old stone bridge over a river",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 768,
+    "cfg_scale": 1.0,
+    "seed": 42,
+    "batch_count": 1,
+    "steps": 8
+  },
+  "metrics": {
+    "latency_s": 14.14,
+    "gen_time_s": 14.0,
+    "queue_time_s": 0.0,
+    "images": 1,
+    "encode_s": 0.64,
+    "sampling_s": 11.48,
+    "vae_decode_s": 1.62,
+    "server_total_s": 13.76,
+    "weights_load_s": 0.2,
+    "cache_hit": 0,
+    "cpu_share_pct": 4.7
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6596.0,
+    "util_avg_pct": 88.8,
+    "power_avg_w": 86.3,
+    "energy_wh": 0.339,
+    "duration_s": 14.14,
+    "samples": 14
+  },
+  "outputs": [
+    "outputs/image/img_3ab74b_0.png"
+  ]
+}

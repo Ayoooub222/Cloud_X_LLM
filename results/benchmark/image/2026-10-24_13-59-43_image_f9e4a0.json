@@ -1,0 +1,55 @@
+{
+  "run_id": "f9e4a0",
+  "timestamp": "2026-10-24 13:59:43",
+  "timezone": "+07",
+  "task": "image",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "warmup",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "8ca7a83"
+  },
+  "params": {
+    "vae_tiling": false,
+    "prompt": "a vintage car in a narrow street",
+    "negative_prompt": "",
+    "width": 768,
+    "height": 768,
+    "cfg_scale": 1.0,
+    "seed": 42,
+    "batch_count": 1,
+    "steps": 8
+  },
+  "metrics": {
+    "latency_s": 18.28,
+    "gen_time_s": 17.0,
+    "queue_time_s": 0.0,
+    "images": 1,
+    "encode_s": 4.28,
+    "sampling_s": 11.85,
+    "vae_decode_s": 1.56,
+    "server_total_s": 17.73,
+    "weights_load_s": 1.01,
+    "cache_hit": 0,
+    "cpu_share_pct": 24.1
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6591.0,
+    "util_avg_pct": 62.7,
+    "power_avg_w": 68.4,
+    "energy_wh": 0.3473,
+    "duration_s": 18.28,
+    "samples": 18
+  },
+  "outputs": [
+    "outputs/image/img_f9e4a0_0.png"
+  ]
+}
