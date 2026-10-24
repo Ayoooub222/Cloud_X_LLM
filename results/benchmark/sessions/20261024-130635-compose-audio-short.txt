@@ -1,0 +1,8 @@
+[start] 2026-10-24 13:06:35 env=local-wsl2-rtx3070laptop suite=audio-short cold_runs=2
+610.62, P8, 63, 17.75 W, [N/A], 210 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=9410
+[end] 2026-10-24 13:09:40 env=local-wsl2-rtx3070laptop suite=audio-short cold_runs=2
+610.62, P0, 80, 75.02 W, [N/A], 1440 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=5736

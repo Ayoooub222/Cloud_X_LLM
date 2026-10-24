@@ -4,6 +4,8 @@
 # then wait until it is ready. Prints the time to ready.
 # MLflow: --mlflow enables it, --no-mlflow disables it, no flag keeps the current state.
 # The MLflow volume is never deleted (see templates/mlflow.yaml).
+# Pods left in "Unknown" (k3s-killall) are force-deleted first: with the Recreate strategy
+# they would block the new rollout, and they make "wait --for=delete" time out.
 set -euo pipefail
 
 RELEASE="ai-models"
@@ -30,6 +32,13 @@ mlflow_deployed() {
   kubectl -n "$NAMESPACE" get deployment mlflow >/dev/null 2>&1
 }
 
+delete_unknown_pods() {
+  kubectl -n "$NAMESPACE" get pods --no-headers 2>/dev/null \
+    | awk '$3 == "Unknown" {print $1}' \
+    | xargs -r kubectl -n "$NAMESPACE" delete pod --force --grace-period=0 \
+    || true
+}
+
 case "${2:-}" in
   --mlflow) MLFLOW="true" ;;
   --no-mlflow) MLFLOW="false" ;;
@@ -50,6 +59,8 @@ for model in $MODELS; do
   if [ "$model" = "$TARGET" ]; then replicas=1; fi
   ARGS+=(--set "models.$model.replicas=$replicas")
 done
+
+delete_unknown_pods
 
 START=$(date +%s)
 helm upgrade --install "$RELEASE" "$CHART" --namespace "$NAMESPACE" --create-namespace "${ARGS[@]}"

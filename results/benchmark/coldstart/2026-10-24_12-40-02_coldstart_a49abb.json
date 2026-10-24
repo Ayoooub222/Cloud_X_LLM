@@ -1,0 +1,39 @@
+{
+  "run_id": "a49abb",
+  "timestamp": "2026-10-24 12:40:02",
+  "timezone": "+07",
+  "task": "coldstart",
+  "backend": "vllm",
+  "model": "openai/whisper-large-v3-turbo",
+  "tag": "coldstart-audio",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-k3s-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "278dd71"
+  },
+  "params": {
+    "target": "audio",
+    "from_state": "none",
+    "first_run_id": "aca300"
+  },
+  "metrics": {
+    "t_ready_s": 67.0,
+    "first_latency_s": 1.208,
+    "t_first_s": 68.21
+  },
+  "gpu": {
+    "name": null,
+    "vram_total_mib": null,
+    "vram_peak_mib": null,
+    "util_avg_pct": null,
+    "power_avg_w": null,
+    "energy_wh": null,
+    "duration_s": null,
+    "samples": 0
+  },
+  "outputs": []
+}

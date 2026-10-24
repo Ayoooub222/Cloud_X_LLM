@@ -1,0 +1,8 @@
+[start] 2026-10-24 12:37:39 env=local-k3s-rtx3070laptop suite=audio-short cold_runs=2
+610.62, P8, 65, 18.46 W, [N/A], 210 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=3993
+[end] 2026-10-24 12:40:41 env=local-k3s-rtx3070laptop suite=audio-short cold_runs=2
+610.62, P0, 78, 38.87 W, [N/A], 1725 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=3797

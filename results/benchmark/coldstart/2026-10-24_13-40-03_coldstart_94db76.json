@@ -1,0 +1,39 @@
+{
+  "run_id": "94db76",
+  "timestamp": "2026-10-24 13:40:03",
+  "timezone": "+07",
+  "task": "coldstart",
+  "backend": "sdcpp",
+  "model": "qwen-image-2.1-turbo-Q4_K",
+  "tag": "coldstart-image",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "278dd71"
+  },
+  "params": {
+    "target": "image",
+    "from_state": "none",
+    "first_run_id": "40986a"
+  },
+  "metrics": {
+    "t_ready_s": 1.0,
+    "first_latency_s": 18.67,
+    "t_first_s": 19.67
+  },
+  "gpu": {
+    "name": null,
+    "vram_total_mib": null,
+    "vram_peak_mib": null,
+    "util_avg_pct": null,
+    "power_avg_w": null,
+    "energy_wh": null,
+    "duration_s": null,
+    "samples": 0
+  },
+  "outputs": []
+}

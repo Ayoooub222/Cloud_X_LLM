@@ -1,0 +1,5 @@
+[start] 2026-10-24 13:39:01 env=local-wsl2-rtx3070laptop suite=image cold_runs=2
+610.62, P8, 65, 16.12 W, [N/A], 210 MHz, 2100 MHz
+GUID du mode de gestion de l'alimentationÿ: 458407f0-c5e0-4df3-90bf-966e691be488  (Acer)battery_status=2
+available_mib=11177
+# note: stopped by check_memory after warmups, image-new series not run (fixed in warm_image)
