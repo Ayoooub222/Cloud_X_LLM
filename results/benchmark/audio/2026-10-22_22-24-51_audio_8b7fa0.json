@@ -1,0 +1,50 @@
+{
+  "run_id": "8b7fa0",
+  "timestamp": "2026-10-22 22:24:51",
+  "timezone": "+07",
+  "task": "audio",
+  "backend": "vllm",
+  "model": "openai/whisper-large-v3-turbo",
+  "tag": "conc-c4",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-k3s-rtx3070laptop",
+    "host": "Mchant",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "77de23e"
+  },
+  "params": {
+    "audio_file": "data/audio/jfk_x6.wav",
+    "concurrency": 4,
+    "language": null,
+    "response_format": "verbose_json",
+    "sample_rate": 44100,
+    "channels": 1
+  },
+  "metrics": {
+    "audio_duration_s": 66.0,
+    "server_duration_s": 66.0,
+    "requests": 4,
+    "latency_s": 1.977,
+    "latency_max_s": 2.028,
+    "wall_s": 2.036,
+    "rtf": 0.03,
+    "batch_rtf": 0.0077,
+    "segments": 3
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 5069.0,
+    "util_avg_pct": 73.5,
+    "power_avg_w": 87.8,
+    "energy_wh": 0.0499,
+    "duration_s": 2.04,
+    "samples": 8
+  },
+  "outputs": [
+    "outputs/audio/audio_8b7fa0.json"
+  ]
+}
