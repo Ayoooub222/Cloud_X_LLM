@@ -5,10 +5,9 @@ if MLflow fails, a warning is printed and the benchmark goes on.
 """
 from __future__ import annotations
 
-import os
 import contextlib
 import io
-
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -18,8 +17,13 @@ def is_enabled() -> bool:
 
 
 def numeric_metrics(record) -> dict[str, float]:
-    """metrics + gpu stats (prefixed 'gpu.'), numbers only, like summarize.py."""
+    """metrics + gpu stats (prefixed 'gpu.'), numbers only, like summarize.py.
+
+    GPU stats are left out when no nvidia-smi sample was taken (e.g. cold start records).
+    """
     metrics = {k: float(v) for k, v in record.metrics.items() if isinstance(v, (int, float))}
+    if not record.gpu.samples:
+        return metrics
     for k, v in record.gpu.model_dump().items():
         if isinstance(v, (int, float)):
             metrics[f"gpu.{k}"] = float(v)
@@ -76,12 +80,11 @@ def log_record(record, json_path: Path) -> None:
         client.set_terminated(run_id, status=status, end_time=start_ms + duration_ms)
 
 
-
 def try_log_record(record, json_path: Path) -> None:
     """Log to MLflow if enabled. Never raises."""
     if not is_enabled():
         return
     try:
         log_record(record, json_path)
-    except Exception as e:
+    except Exception as e:  # MLflow client errors have no common base class
         print(f"[mlflow] warning: run not logged ({type(e).__name__}: {e})")

@@ -11,10 +11,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from src.bench.mlflow_log import try_log_record   # with the other imports
-
 
 from pydantic import BaseModel, Field
+
+from src.bench.mlflow_log import try_log_record
 
 RESULTS_DIR = Path(os.getenv("BENCH_DIR", "results/benchmark"))
 DEFAULT_ENV_LABEL = "local-wsl2-rtx3070laptop"
@@ -85,7 +85,7 @@ class GpuSampler:
                 self.samples.append(sample)
             self._stop.wait(self.interval_s)
 
-    def __enter__(self) -> "GpuSampler":
+    def __enter__(self) -> GpuSampler:
         self._start = time.perf_counter()
         self._thread.start()
         return self

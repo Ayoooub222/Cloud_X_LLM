@@ -22,7 +22,6 @@ import argparse
 import json
 import os
 import statistics
-
 from collections import defaultdict
 from pathlib import Path
 
@@ -76,10 +75,16 @@ def flatten_numeric(data: dict, prefix: str = "") -> dict[str, float]:
     return out
 
 
+def gpu_fields(record: dict) -> dict[str, float]:
+    """gpu.* fields, or nothing when no nvidia-smi sample was taken (e.g. cold start records)."""
+    gpu = record.get("gpu") or {}
+    if not gpu.get("samples"):
+        return {}
+    return flatten_numeric(gpu, "gpu.")
+
+
 def numeric_fields(record: dict) -> dict[str, float]:
-    return flatten_numeric(record.get("metrics") or {}) | flatten_numeric(
-        record.get("gpu") or {}, "gpu."
-    )
+    return flatten_numeric(record.get("metrics") or {}) | gpu_fields(record)
 
 
 def is_failure(record: dict) -> bool:

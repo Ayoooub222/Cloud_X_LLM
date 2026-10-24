@@ -1,26 +1,20 @@
-#!usr/bin/python
-
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+"""Load the app configuration (conf/app.conf) and the vLLM API key (.env)."""
 import json
-import argparse
-
+import os
 from pathlib import Path
+
 from dotenv import load_dotenv
- 
-class Loader():
-    def load_conf(self):
-        with open(Path("conf/app.conf"), "r", encoding='utf-8') as f:
-            return json.load(f)
-    def load_env(self):
-        try:
-            load_dotenv()
-        except:
-            pass
-        return os.getenv("VLLM_API_KEY")
+
+CONF_PATH = Path("conf/app.conf")
+API_KEY_VAR = "VLLM_API_KEY"
 
 
-    
+class Loader:
+    def load_conf(self, path: Path = CONF_PATH) -> dict:
+        """Read the JSON configuration file."""
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    def load_env(self) -> str | None:
+        """Load .env if present (no error otherwise) and return the vLLM API key."""
+        load_dotenv()
+        return os.getenv(API_KEY_VAR)

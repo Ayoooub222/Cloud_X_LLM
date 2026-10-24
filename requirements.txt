@@ -1,5 +1,6 @@
 openai
-dotenv 
+python-dotenv
+pydantic
 pymupdf
 jsonschema
 mlflow-skinny==3.16.0

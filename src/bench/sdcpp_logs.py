@@ -2,7 +2,7 @@
 import os
 import re
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # "docker" (compose) or "k8s" (k3s)
 LOG_SOURCE = os.getenv("IMAGE_LOG_SOURCE", "docker")
@@ -31,7 +31,7 @@ def docker_logs_cmd(since_unix: float) -> list[str]:
 
 def k8s_logs_cmd(since_unix: float) -> list[str]:
     """Build the kubectl logs command for the image deployment in k3s."""
-    since = datetime.fromtimestamp(int(since_unix), tz=timezone.utc)
+    since = datetime.fromtimestamp(int(since_unix), tz=UTC)
     since_rfc3339 = since.strftime("%Y-%m-%dT%H:%M:%SZ")
     return ["kubectl", "-n", K8S_NAMESPACE, "logs", K8S_TARGET, "--since-time", since_rfc3339]
 
@@ -50,9 +50,8 @@ def read_logs(since_unix: float) -> str:
     return result.stdout + result.stderr
 
 
-def sdcpp_stage_times(since_unix: float) -> dict[str, float]:
-    """Parse stage timings of the run started at `since_unix`. Missing stages are left out."""
-    logs = read_logs(since_unix)
+def parse_stage_times(logs: str) -> dict[str, float]:
+    """Parse stage timings from raw sd-server logs. Missing stages are left out."""
     times = {}
 
     for name, pattern in STAGE_PATTERNS.items():
@@ -71,3 +70,8 @@ def sdcpp_stage_times(since_unix: float) -> dict[str, float]:
     if "encode_s" in times and times.get("server_total_s"):
         times["cpu_share_pct"] = round(100 * times["encode_s"] / times["server_total_s"], 1)
     return times
+
+
+def sdcpp_stage_times(since_unix: float) -> dict[str, float]:
+    """Stage timings of the run started at `since_unix`."""
+    return parse_stage_times(read_logs(since_unix))
