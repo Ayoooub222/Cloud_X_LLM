@@ -1,0 +1,6 @@
+# Allow-list: only what the bench image needs is sent to the build
+*
+!requirements.txt
+!src/
+**/__pycache__
+**/*.pyc

@@ -1,8 +1,8 @@
-openai
-python-dotenv
-pydantic
-pymupdf
-jsonschema
+openai==3.26.0
+python-dotenv==1.2.4
+pydantic==2.13.5
+pymupdf==1.28.2
+jsonschema==4.26.0
 mlflow-skinny==3.16.0
 soundfile==0.14.0
 numpy==2.5.4
