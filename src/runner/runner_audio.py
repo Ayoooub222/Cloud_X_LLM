@@ -12,8 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from src.bench.recorder import BenchRecord, GpuSampler
-from src.clients.audio_client import (AudioClient, TranscriptionRequest,
-                                      TranscriptionResult, audio_info)
+from src.clients.audio_client import AudioClient, TranscriptionRequest, TranscriptionResult, audio_info
 
 GPU_SAMPLE_INTERVAL_S = 0.25  # runs are short (< 2 s), 1 s would give a single sample
 

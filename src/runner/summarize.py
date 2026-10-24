@@ -145,7 +145,8 @@ def print_table(header: list[str], rows: list[list[str]]) -> None:
     table = [header] + rows
     widths = [max(len(row[i]) for row in table) for i in range(len(header))]
     for index, row in enumerate(table):
-        cells = [row[0].ljust(widths[0])] + [c.rjust(w) for c, w in zip(row[1:], widths[1:])]
+        cells = [row[0].ljust(widths[0])] + [c.rjust(w) for c, w in zip(row[1:], widths[1:], strict=True)]
+
         print("  ".join(cells))
         if index == 0:
             print("  ".join("-" * w for w in widths))

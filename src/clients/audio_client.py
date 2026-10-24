@@ -70,7 +70,7 @@ class AudioClient:
     def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout_s: float = REQUEST_TIMEOUT_S):
         self.http = httpx.Client(base_url=base_url, timeout=timeout_s)
 
-    def __enter__(self) -> "AudioClient":
+    def __enter__(self) -> AudioClient:
         return self
 
     def __exit__(self, *exc) -> None:
