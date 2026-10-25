@@ -2,7 +2,7 @@
 # GPU node bootstrap: k3s, NVIDIA runtime class, device plugin, project chart.
 # Rendered by Terraform templatefile(). Output goes to /var/log/cloud-init-output.log.
 # Models stay at replicas 0: weights are downloaded into MODELS_DIR and a model is enabled afterwards.
-# Shell variables are written as $NAME (no braces): ${...} is reserved for Terraform template variables.
+# Shell variables are written as $NAME without braces: the brace form is reserved for Terraform template variables.
 set -euxo pipefail
 
 K3S_VERSION="${k3s_version}"
