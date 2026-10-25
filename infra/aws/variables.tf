@@ -65,7 +65,7 @@ variable "repo_url" {
 variable "git_ref" {
   description = "Git tag or branch deployed on the node."
   type        = string
-  default     = "v0.3.0"
+  default     = "v0.4.0"
 }
 
 variable "budget_limit_usd" {
