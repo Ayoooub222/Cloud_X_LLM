@@ -35,8 +35,25 @@ jobs:
       - name: Render chart
         run: helm template ai-models deploy/helm/ai-models > /dev/null
 
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/aws
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+      - name: Format
+        run: terraform fmt -check -recursive
+      - name: Init (no backend, no AWS credentials)
+        run: terraform init -backend=false -input=false
+      - name: Validate
+        run: terraform validate
+
   image:
-    needs: [python, helm]
+    needs: [python, helm, terraform]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:

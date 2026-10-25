@@ -1,0 +1,37 @@
+#!/bin/bash
+# GPU node bootstrap: k3s, NVIDIA runtime class, device plugin, project chart.
+# Rendered by Terraform templatefile(). Output goes to /var/log/cloud-init-output.log.
+# Models stay at replicas 0: weights are downloaded and a model is enabled afterwards.
+set -euxo pipefail
+
+K3S_VERSION="${k3s_version}"
+NVDP_VERSION="${nvdp_version}"
+REPO_URL="${repo_url}"
+GIT_REF="${git_ref}"
+RESULTS_BUCKET="${bucket}"
+CHART_DIR=/opt/cloud-x-llm
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+echo "RESULTS_BUCKET=$RESULTS_BUCKET" >> /etc/environment
+
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="$K3S_VERSION" INSTALL_K3S_EXEC="--disable traefik" sh -
+until kubectl wait --for=condition=Ready node --all --timeout=60s; do sleep 5; done
+kubectl label node --all nvidia.com/gpu.present=true --overwrite
+
+kubectl apply -f - <<'EOF'
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: nvidia
+handler: nvidia
+EOF
+
+curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+helm repo add nvdp https://nvidia.github.io/k8s-device-plugin
+helm upgrade --install nvdp nvdp/nvidia-device-plugin --version "$NVDP_VERSION" \
+  --namespace nvidia-device-plugin --create-namespace --set runtimeClassName=nvidia
+
+git clone --depth 1 --branch "$GIT_REF" "$REPO_URL" "$CHART_DIR"
+helm upgrade --install ai-models "$CHART_DIR/deploy/helm/ai-models" \
+  --namespace ai-models --create-namespace --set mlflow.enabled=true

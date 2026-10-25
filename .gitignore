@@ -10,3 +10,9 @@ outputs/
 __pycache__/
 *.pyc
 !results/benchmark/
+
+# Terraform
+infra/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
