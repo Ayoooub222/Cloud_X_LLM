@@ -1,7 +1,8 @@
 #!/bin/bash
 # GPU node bootstrap: k3s, NVIDIA runtime class, device plugin, project chart.
 # Rendered by Terraform templatefile(). Output goes to /var/log/cloud-init-output.log.
-# Models stay at replicas 0: weights are downloaded and a model is enabled afterwards.
+# Models stay at replicas 0: weights are downloaded into MODELS_DIR and a model is enabled afterwards.
+# Shell variables are written as $NAME (no braces): ${...} is reserved for Terraform template variables.
 set -euxo pipefail
 
 K3S_VERSION="${k3s_version}"
@@ -10,9 +11,14 @@ REPO_URL="${repo_url}"
 GIT_REF="${git_ref}"
 RESULTS_BUCKET="${bucket}"
 CHART_DIR=/opt/cloud-x-llm
+MODELS_DIR=/opt/models
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 echo "RESULTS_BUCKET=$RESULTS_BUCKET" >> /etc/environment
+echo "MODELS_DIR=$MODELS_DIR" >> /etc/environment
+
+# The chart mounts MODELS_DIR as a hostPath of type Directory: it must exist before any pod starts.
+mkdir -p "$MODELS_DIR"
 
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="$K3S_VERSION" INSTALL_K3S_EXEC="--disable traefik" sh -
 until kubectl wait --for=condition=Ready node --all --timeout=60s; do sleep 5; done
@@ -34,4 +40,6 @@ helm upgrade --install nvdp nvdp/nvidia-device-plugin --version "$NVDP_VERSION" 
 
 git clone --depth 1 --branch "$GIT_REF" "$REPO_URL" "$CHART_DIR"
 helm upgrade --install ai-models "$CHART_DIR/deploy/helm/ai-models" \
-  --namespace ai-models --create-namespace --set mlflow.enabled=true
+  --namespace ai-models --create-namespace \
+  --set mlflow.enabled=true \
+  --set modelsDir="$MODELS_DIR"
