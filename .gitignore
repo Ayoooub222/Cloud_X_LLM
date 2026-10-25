@@ -22,3 +22,5 @@ infra/**/.terraform/
 *.tfstate
 *.tfstate.*
 *.tfplan
+results/benchmark/vision/
+CONTEXT.md
