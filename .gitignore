@@ -1,15 +1,21 @@
-*data/
-*conf/app.conf
+# Local data, models and secrets (never committed)
+data/
+models/
 .env*
-models/*
-results/*
-outputs/*mlruns/
-data/audio/
+
+# Generated outputs
 mlruns/
 outputs/
+results/*
+!results/benchmark/
+
+# Python
+venv/
+.venv/
 __pycache__/
 *.pyc
-!results/benchmark/
+.pytest_cache/
+.ruff_cache/
 
 # Terraform
 infra/**/.terraform/
