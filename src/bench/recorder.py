@@ -20,6 +20,7 @@ RESULTS_DIR = Path(os.getenv("BENCH_DIR", "results/benchmark"))
 DEFAULT_ENV_LABEL = "local-wsl2-rtx3070laptop"
 TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 NVIDIA_QUERY = "name,memory.total,memory.used,utilization.gpu,power.draw"
+GPU_ID_VAR = "CUDA_VISIBLE_DEVICES"
 
 
 # ---------- GPU ----------
@@ -46,6 +47,18 @@ def to_float(text: str) -> float | None:
 def mean(values: list[float]) -> float:
     return sum(values) / len(values)
 
+def nvidia_smi_cmd() -> list[str]:
+    """nvidia-smi query restricted to the first GPU listed in CUDA_VISIBLE_DEVICES, if set.
+
+    nvidia-smi ignores CUDA_VISIBLE_DEVICES: without --id it lists every GPU of the host.
+    Set CUDA_DEVICE_ORDER=PCI_BUS_ID so CUDA and nvidia-smi use the same indices.
+    """
+    cmd = ["nvidia-smi", f"--query-gpu={NVIDIA_QUERY}", "--format=csv,noheader,nounits"]
+    first_visible = os.getenv(GPU_ID_VAR, "").split(",")[0].strip()
+    if first_visible:
+        cmd.append(f"--id={first_visible}")
+    return cmd
+
 
 class GpuSampler:
     """Poll nvidia-smi every `interval_s` seconds in a background thread.
@@ -68,7 +81,7 @@ class GpuSampler:
 
     def read_once(self) -> dict | None:
         """Run nvidia-smi once. Return one sample, or None if the call failed."""
-        cmd = ["nvidia-smi", f"--query-gpu={NVIDIA_QUERY}", "--format=csv,noheader,nounits"]
+        cmd = nvidia_smi_cmd()
         try:
             output = subprocess.run(cmd, capture_output=True, text=True, timeout=5, check=True).stdout
             name, total, used, util, power = output.splitlines()[0].split(",")
