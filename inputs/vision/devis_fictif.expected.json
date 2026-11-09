@@ -1,0 +1,137 @@
+[
+  {
+    "type_document": "DEVIS_GARAGE",
+    "lisibilite": "BONNE",
+    "emetteur": {
+      "nom": "Garage des Essais (fictif)",
+      "adresse": "12 rue des Essais",
+      "code_postal": "99000",
+      "ville": "Villetest",
+      "siret": "000 000 000 00000"
+    },
+    "vehicule": {
+      "immatriculation": "AA-123-AA",
+      "marque_modele": "Peugeot 208 1.2 PureTech",
+      "vin": "VF3TEST0000000001",
+      "kilometrage": "84 512 km",
+      "date_mise_circulation": "14/06/2019"
+    },
+    "en_tete": {
+      "numero_document": "D-2026-0042",
+      "date_document": "03/11/2026",
+      "date_fin_validite": "03/12/2026"
+    },
+    "pieces": [
+      {
+        "reference": "PLQ-208-AV",
+        "designation": "Jeu de plaquettes de frein avant",
+        "quantite": "1",
+        "prix_unitaire_ht": "48,90",
+        "remise": null,
+        "montant_ht": "48,90",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "DSQ-208-AV",
+        "designation": "Disques de frein avant (paire)",
+        "quantite": "1",
+        "prix_unitaire_ht": "96,50",
+        "remise": "10 %",
+        "montant_ht": "86,85",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "FH-1103",
+        "designation": "Filtre à huile",
+        "quantite": "1",
+        "prix_unitaire_ht": "12,40",
+        "remise": null,
+        "montant_ht": "12,40",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "HM-5W30-5L",
+        "designation": "Huile moteur 5W30 (bidon 5 L)",
+        "quantite": "1",
+        "prix_unitaire_ht": "42,00",
+        "remise": null,
+        "montant_ht": "42,00",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "FA-208",
+        "designation": "Filtre à air",
+        "quantite": "1",
+        "prix_unitaire_ht": "18,75",
+        "remise": null,
+        "montant_ht": "18,75",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "BEG-650",
+        "designation": "Balais d'essuie-glace (paire)",
+        "quantite": "1",
+        "prix_unitaire_ht": "24,90",
+        "remise": "5 %",
+        "montant_ht": "23,66",
+        "taux_tva": "20 %"
+      },
+      {
+        "reference": "AMP-H7",
+        "designation": "Ampoule H7 12 V",
+        "quantite": "2",
+        "prix_unitaire_ht": "6,90",
+        "remise": null,
+        "montant_ht": "13,80",
+        "taux_tva": "20 %"
+      }
+    ],
+    "main_oeuvre": [
+      {
+        "designation": "Remplacement disques et plaquettes avant",
+        "categorie": "T2",
+        "temps": "1,5 h",
+        "taux_horaire_ht": "68,00",
+        "montant_ht": "102,00"
+      },
+      {
+        "designation": "Vidange et remplacement des filtres",
+        "categorie": "T1",
+        "temps": "0,8 h",
+        "taux_horaire_ht": "58,00",
+        "montant_ht": "46,40"
+      },
+      {
+        "designation": "Remplacement balais et ampoules",
+        "categorie": "T1",
+        "temps": "0,3 h",
+        "taux_horaire_ht": "58,00",
+        "montant_ht": "17,40"
+      }
+    ],
+    "frais_divers": [
+      {
+        "designation": "Forfait recyclage des déchets",
+        "montant_ht": "8,50"
+      },
+      {
+        "designation": "Produits d'atelier",
+        "montant_ht": "5,90"
+      }
+    ],
+    "resultat_ct": "NON_APPLICABLE",
+    "defauts_ct": [],
+    "totaux": {
+      "total_ht": "426,56",
+      "taux_tva": "20 %",
+      "total_tva": "85,31",
+      "total_ttc": "511,87"
+    },
+    "mentions": {
+      "mot_devis_ou_ordre_reparation": true,
+      "duree_validite_indiquee": true,
+      "zone_bon_pour_accord": true,
+      "taux_horaire_affiche": true
+    }
+  }
+]

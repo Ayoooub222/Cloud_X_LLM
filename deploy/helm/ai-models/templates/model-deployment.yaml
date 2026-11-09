@@ -1,0 +1,90 @@
+{{- range $name, $m := .Values.models }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: ai-models
+spec:
+  replicas: {{ $m.replicas }}
+  # Must exceed the startup probe budget (120 x 5 s = 600 s).
+  progressDeadlineSeconds: 900
+
+  # Single GPU: the old pod must release it before the new one can start.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/part-of: ai-models
+    spec:
+      runtimeClassName: nvidia
+      {{- with $m.shareProcessNamespace }}
+      # The pause container becomes PID 1: a binary without a SIGTERM handler then gets the
+      # default action (exit) instead of being ignored as a namespace init process.
+      shareProcessNamespace: {{ . }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ $m.terminationGracePeriodSeconds | default 30 }}
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.registry }}/{{ $m.repository }}:{{ $m.tag }}"
+          imagePullPolicy: IfNotPresent
+          {{- with $m.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          args:
+            {{- toYaml $m.args | nindent 12 }}
+          env:
+            {{- range $key, $value := $m.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $m.containerPort }}
+          # CPU/memory from values (measured with docker stats), the GPU is always 1.
+          resources:
+            {{- with (dig "resources" "requests" (dict) $m) }}
+            requests:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+            limits:
+              nvidia.com/gpu: 1
+              {{- with (dig "resources" "limits" (dict) $m) }}
+              {{- toYaml . | nindent 14 }}
+              {{- end }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+            - name: shm
+              mountPath: /dev/shm
+          # Up to 10 min to load weights and compile before the pod is killed.
+          startupProbe:
+            httpGet:
+              path: {{ $m.healthPath }}
+              port: http
+            periodSeconds: 5
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: {{ $m.healthPath }}
+              port: http
+            periodSeconds: 10
+      volumes:
+        - name: models
+          hostPath:
+            path: {{ required "modelsDir is required" $.Values.modelsDir }}
+            type: Directory
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ $.Values.shmSize }}
+{{- end }}

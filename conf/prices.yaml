@@ -1,0 +1,59 @@
+# Public list prices used by the cost model (src/cost). Facts only: assumptions live in
+# conf/cost_scenarios.yaml. Every value has a source and a retrieval date; refresh them
+# before quoting a result (spot prices move every few minutes).
+retrieved: "2026-11-09"
+
+fx:
+  usd_per_eur: 1.1165
+  date: "2026-11-06"
+  source: https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A (ECB reference rate)
+
+aws:
+  region: eu-west-3          # Paris
+  hours_per_month: 730       # AWS billing convention
+  sources:
+    on_demand: https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ec2-ondemand-without-sec-sel/EU%20(Paris)/Linux/index.json (published 2026-11-07)
+    spot: https://website.spot.ec2.aws.a2z.com/spot.json (snapshot 2026-11-09, Linux)
+    interruptions: https://spot-bid-advisor.s3.amazonaws.com/spot-advisor-data.json (Spot Instance Advisor, eu-west-3)
+    ebs: https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/ec2/USD/current/ebs.json (published 2026-11-07)
+    s3: https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/s3/USD/current/s3.json (published 2026-11-04)
+    egress: https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/datatransfer/USD/current/datatransfer.json (published 2026-11-03)
+  # USD per hour, Linux. spot_interruption_pct: upper bound of the advisor bucket, % of instances
+  # interrupted per month (null = not listed for the region).
+  instances:
+    g4dn.xlarge:  {gpu: "T4 16 GB",   vcpu: 4, memory_gib: 16, on_demand_hour: 0.615,  spot_hour: 0.1827, spot_interruption_pct: 5}
+    g4dn.2xlarge: {gpu: "T4 16 GB",   vcpu: 8, memory_gib: 32, on_demand_hour: 0.879,  spot_hour: 0.2399, spot_interruption_pct: 100}
+    g5.xlarge:    {gpu: "A10G 24 GB", vcpu: 4, memory_gib: 16, on_demand_hour: 1.277,  spot_hour: 0.3833, spot_interruption_pct: null}
+    g6.xlarge:    {gpu: "L4 24 GB",   vcpu: 4, memory_gib: 16, on_demand_hour: 1.0216, spot_hour: 0.3976, spot_interruption_pct: 22}
+  ebs_gp3_gb_month: 0.0928
+  s3_standard_gb_month: 0.024
+  egress_internet_gb: 0.09   # first 10 TB per month, after the 100 GB/month free tier (ignored here)
+
+local:
+  electricity_eur_kwh: 0.1940
+  electricity_note: EDF Tarif Bleu (TRVE) Base 6 kVA TTC, variable part, effective 2026-02-01
+  electricity_source: https://www.cre.fr/consommateurs/comprendre-les-tarifs-reglementes-de-vente-delectricite-trve.html
+
+# Hosted APIs to compare with. Prices in USD.
+apis:
+  openai-gpt-4o-mini-transcribe:
+    task: audio
+    pricing: {kind: per_audio_minute, usd: 0.003}
+    source: https://developers.openai.com/api/docs/pricing (estimated cost per minute, read 2026-11-09)
+  openai-whisper:
+    task: audio
+    pricing: {kind: per_audio_minute, usd: 0.006}
+    source: https://developers.openai.com/api/docs/pricing (read 2026-11-09)
+  groq-whisper-large-v3-turbo:
+    task: audio
+    note: same model as the self-hosted one
+    pricing: {kind: per_audio_hour, usd: 0.04, min_billed_s: 10}
+    source: https://console.groq.com/docs/speech-to-text (read 2026-11-09)
+  gemini-3.1-flash-lite:
+    task: vision
+    pricing: {kind: per_token, input_usd_per_m: 0.25, output_usd_per_m: 1.50}
+    source: https://aistudio.google.com/docs/pricing (standard tier, read 2026-11-09)
+  gemini-3.1-flash-lite-batch:
+    task: vision
+    pricing: {kind: per_token, input_usd_per_m: 0.125, output_usd_per_m: 0.75}
+    source: https://aistudio.google.com/docs/pricing (batch tier, read 2026-11-09)

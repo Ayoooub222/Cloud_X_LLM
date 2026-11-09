@@ -1,0 +1,67 @@
+{
+  "run_id": "173748",
+  "timestamp": "2026-11-08 20:41:30",
+  "timezone": "+07",
+  "task": "audio",
+  "backend": "vllm",
+  "model": "openai/whisper-large-v3-turbo",
+  "tag": "ls66-mnbt8192-c4",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "02e03fa"
+  },
+  "params": {
+    "audio_file": "inputs/audio/librispeech_1272-141231_66s.flac",
+    "concurrency": 4,
+    "language": "en",
+    "response_format": "verbose_json",
+    "sample_rate": 16000,
+    "channels": 1,
+    "reference_file": "inputs/audio/librispeech_1272-141231_66s.txt"
+  },
+  "metrics": {
+    "audio_duration_s": 66.42,
+    "server_duration_s": 66.42,
+    "requests": 4,
+    "latency_s": 1.548,
+    "latency_max_s": 1.605,
+    "wall_s": 1.608,
+    "rtf": 0.0233,
+    "batch_rtf": 0.0061,
+    "segments": 7,
+    "sched.samples": 4,
+    "sched.running_max": 8.0,
+    "sched.running_avg": 4.5,
+    "sched.waiting_max": 4.0,
+    "sched.waiting_avg": 1.75,
+    "sched.kv_cache_max": 0.0822,
+    "sched.kv_cache_avg": 0.0467,
+    "sched.waiting_capacity_max": 4.0,
+    "sched.waiting_capacity_avg": 1.75,
+    "sched.waiting_deferred_max": 0.0,
+    "sched.waiting_deferred_avg": 0.0,
+    "wer": 0.0338,
+    "wer_max": 0.0338,
+    "reference_words": 148,
+    "substitutions": 2,
+    "deletions": 1,
+    "insertions": 2
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 5455.0,
+    "util_avg_pct": 81.7,
+    "power_avg_w": 81.9,
+    "energy_wh": 0.0366,
+    "duration_s": 1.61,
+    "samples": 6
+  },
+  "outputs": [
+    "outputs/audio/audio_173748.json"
+  ]
+}

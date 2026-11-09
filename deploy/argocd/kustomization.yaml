@@ -1,0 +1,8 @@
+# Light Argo CD: the "core" install (no UI, no Dex, no notifications), 4 workloads instead of 7.
+# kubectl apply -k deploy/argocd   (then: kubectl apply -f deploy/argocd/application.yaml)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+resources:
+  - namespace.yaml
+  - https://raw.githubusercontent.com/argoproj/argo-cd/v3.6.1/manifests/core-install.yaml

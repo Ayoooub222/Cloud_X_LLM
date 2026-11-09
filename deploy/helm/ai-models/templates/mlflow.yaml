@@ -1,0 +1,96 @@
+# The PVC is always rendered (even when mlflow is disabled) so that Helm never deletes it,
+# and "keep" protects it from "helm uninstall". Argo CD ignores that Helm annotation: its own
+# sync option keeps the claim when the Application is deleted. local-path uses reclaimPolicy Delete.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mlflow-data
+  labels:
+    app.kubernetes.io/name: mlflow
+    app.kubernetes.io/part-of: ai-models
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: {{ .Values.mlflow.storageSize }}
+{{- if .Values.mlflow.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mlflow
+  labels:
+    app.kubernetes.io/name: mlflow
+    app.kubernetes.io/part-of: ai-models
+spec:
+  replicas: 1
+  # SQLite on a ReadWriteOnce volume: never two pods at the same time.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: mlflow
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: mlflow
+        app.kubernetes.io/part-of: ai-models
+    spec:
+      containers:
+        - name: mlflow
+          image: {{ .Values.mlflow.image }}
+          command:
+            - mlflow
+            - server
+            - --host
+            - 0.0.0.0
+            - --port
+            - {{ .Values.mlflow.port | quote }}
+            # One worker is enough for a single user and saves RAM for the image model.
+            - --workers
+            - {{ .Values.mlflow.workers | default 1 | quote }}
+            - --backend-store-uri
+            - sqlite:////mlflow/mlflow.db
+            - --artifacts-destination
+            - /mlflow/artifacts
+          ports:
+            - name: http
+              containerPort: {{ .Values.mlflow.port }}
+          {{- with .Values.mlflow.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /mlflow
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mlflow-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow
+  labels:
+    app.kubernetes.io/name: mlflow
+    app.kubernetes.io/part-of: ai-models
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: mlflow
+  ports:
+    - name: http
+      port: {{ .Values.mlflow.port }}
+      targetPort: http
+{{- end }}

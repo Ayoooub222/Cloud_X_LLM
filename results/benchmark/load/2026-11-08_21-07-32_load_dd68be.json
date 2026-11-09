@@ -1,0 +1,68 @@
+{
+  "run_id": "dd68be",
+  "timestamp": "2026-11-08 21:07:32",
+  "timezone": "+07",
+  "task": "load",
+  "backend": "vllm",
+  "model": "openai/whisper-large-v3-turbo",
+  "tag": "k6-audio-r60",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "fb138cc"
+  },
+  "params": {
+    "target": "audio",
+    "script": "deploy/k6/audio.js",
+    "k6_version": "v2.3.0",
+    "audio_file": "inputs/audio/librispeech_1272-141231_66s.flac",
+    "language": "en",
+    "rate_rpm": 60,
+    "duration_s": 60
+  },
+  "metrics": {
+    "target_rps": 1.0,
+    "achieved_rps": 1.0,
+    "requests": 60,
+    "failed_rate": 0.0,
+    "dropped_iterations": 0,
+    "vus_max": 10,
+    "latency_avg_s": 0.541,
+    "latency_p50_s": 0.536,
+    "latency_p90_s": 0.593,
+    "latency_p95_s": 0.601,
+    "latency_p99_s": 0.664,
+    "latency_max_s": 0.684,
+    "slo_p95_s": 5.0,
+    "slo_ok": 1,
+    "test_run_s": 60.0,
+    "sched.samples": 120,
+    "sched.running_max": 3.0,
+    "sched.running_avg": 0.6833,
+    "sched.waiting_max": 1.0,
+    "sched.waiting_avg": 0.1,
+    "sched.kv_cache_max": 0.0301,
+    "sched.kv_cache_avg": 0.0068,
+    "sched.waiting_capacity_max": 1.0,
+    "sched.waiting_capacity_avg": 0.1,
+    "sched.waiting_deferred_max": 0.0,
+    "sched.waiting_deferred_avg": 0.0,
+    "wh_per_request": 0.01807
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 5314.0,
+    "util_avg_pct": 40.9,
+    "power_avg_w": 64.6,
+    "energy_wh": 1.0844,
+    "duration_s": 60.41,
+    "samples": 59
+  },
+  "outputs": [
+    "outputs/load/k6_dd68be.json"
+  ]
+}

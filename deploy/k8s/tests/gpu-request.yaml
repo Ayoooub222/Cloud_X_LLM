@@ -1,0 +1,19 @@
+# Requests one GPU through the device plugin. NVIDIA_VISIBLE_DEVICES is not set
+# here: the plugin injects it. Create this pod twice with "kubectl create" to
+# check that the second one stays Pending (a GPU is an integer resource).
+apiVersion: v1
+kind: Pod
+metadata:
+  generateName: gpu-request-
+  labels:
+    app: gpu-request
+spec:
+  restartPolicy: Never
+  runtimeClassName: nvidia
+  containers:
+    - name: cuda
+      image: nvidia/cuda:12.8.1-base-ubuntu24.04
+      command: ["sh", "-c", "nvidia-smi -L && sleep 90"]
+      resources:
+        limits:
+          nvidia.com/gpu: 1

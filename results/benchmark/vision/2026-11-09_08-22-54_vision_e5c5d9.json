@@ -1,0 +1,72 @@
+{
+  "run_id": "e5c5d9",
+  "timestamp": "2026-11-09 08:22:54",
+  "timezone": "UTC",
+  "task": "vision",
+  "backend": "vllm",
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "tag": "warmup",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "kaggle-t4",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "python": "3.13.15",
+    "git_commit": "20c4628"
+  },
+  "params": {
+    "pdf_path": "inputs/vision/devis_fictif.pdf",
+    "pdf_size_bytes": 68750,
+    "pdf_sha256": "e89c8a1be152a80360b4f359e77af05923d7f6b521bfd8854d98d85f0e5e60d4",
+    "pages_total": 1,
+    "dpi": 100,
+    "schema": "ExtractionPage",
+    "prompt_chars": 6374,
+    "max_tokens": 4096,
+    "temperature": 0.1,
+    "concurrency": 1,
+    "page": 0,
+    "width": 827,
+    "height": 1170
+  },
+  "metrics": {
+    "requests": 1,
+    "latency_s": 39.663,
+    "latency_max_s": 39.663,
+    "wall_s": 39.709,
+    "prompt_tokens": 3106,
+    "completion_tokens": 1296.0,
+    "total_tokens": 4402,
+    "tokens_per_s": 32.67,
+    "batch_tokens_per_s": 32.64,
+    "pages_per_hour": 90.7,
+    "structured_ok": 1,
+    "sched.samples": 78,
+    "sched.running_max": 1.0,
+    "sched.running_avg": 0.9231,
+    "sched.waiting_max": 1.0,
+    "sched.waiting_avg": 0.0513,
+    "sched.kv_cache_max": 0.0762,
+    "sched.kv_cache_avg": 0.0596,
+    "sched.waiting_capacity_max": 0.0,
+    "sched.waiting_capacity_avg": 0.0,
+    "sched.waiting_deferred_max": 1.0,
+    "sched.waiting_deferred_avg": 0.0513,
+    "fields_total": 92,
+    "field_accuracy": 0.9674,
+    "field_accuracy_min": 0.9674
+  },
+  "gpu": {
+    "name": "Tesla T4",
+    "vram_total_mib": 15360.0,
+    "vram_peak_mib": 11207.0,
+    "util_avg_pct": 91.8,
+    "power_avg_w": 64.1,
+    "energy_wh": 0.7082,
+    "duration_s": 39.75,
+    "samples": 39
+  },
+  "outputs": [
+    "outputs/vision/vision_e5c5d9.json"
+  ]
+}

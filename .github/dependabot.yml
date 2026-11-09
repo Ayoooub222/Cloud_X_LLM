@@ -1,0 +1,28 @@
+# Weekly update PRs. Actions are pinned by commit SHA: Dependabot bumps the SHA and the version comment.
+# Major versions get their own PR (read the release notes first), minor and patch are grouped.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      python-minor:
+        update-types: ["minor", "patch"]
+    ignore:
+      # pymupdf renders the reference quote: a new major changes its bytes and sha256 (2.1 does),
+      # which breaks the comparison with the existing vision records.
+      - dependency-name: pymupdf
+        update-types: ["version-update:semver-major"]
+      # The client stays on the server version (ghcr.io/mlflow/mlflow in compose and in the chart):
+      # bump them together, by hand.
+      - dependency-name: mlflow-skinny

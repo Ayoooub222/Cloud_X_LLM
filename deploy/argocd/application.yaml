@@ -1,0 +1,58 @@
+# Argo CD Application for the ai-models chart: GitOps alternative to scripts/switch_k8s.sh.
+# Install: kubectl apply --server-side -k deploy/argocd, then apply this file (see the README).
+#
+# The served model comes from Git: deploy/helm/ai-models/values-gitops.yaml.
+# modelsDir is machine-specific and stays out of Git: set it on the cluster with
+#   kubectl -n argocd patch application ai-models --type merge -p '{"spec":{"source":{"helm":{"parameters":[{"name":"modelsDir","value":"/opt/models"}]}}}}'
+# The core install has no API server, so no "default" project: this one only allows the repository
+# and the ai-models namespace.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: ai-models
+  namespace: argocd
+spec:
+  description: Model servers of Cloud_X_LLM
+  sourceRepos:
+    - https://github.com/Ayoooub222/Cloud_X_LLM.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: ai-models
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-models
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: ai-models
+  source:
+    repoURL: https://github.com/Ayoooub222/Cloud_X_LLM.git
+    # main for the local GitOps loop; pin a release tag (like the Terraform git_ref) on AWS.
+    targetRevision: main
+    path: deploy/helm/ai-models
+    helm:
+      releaseName: ai-models
+      valueFiles:
+        - values-gitops.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-models
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    # A GPU pod can take 10 min to become ready: retry instead of failing the sync.
+    retry:
+      limit: 3
+      backoff:
+        duration: 30s
+        factor: 2
+        maxDuration: 5m

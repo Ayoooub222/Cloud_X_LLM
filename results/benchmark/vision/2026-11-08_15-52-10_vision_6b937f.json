@@ -1,0 +1,61 @@
+{
+  "run_id": "6b937f",
+  "timestamp": "2026-11-08 15:52:10",
+  "timezone": "+07",
+  "task": "vision",
+  "backend": "vllm",
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "tag": "conc-c4",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "71f494d"
+  },
+  "params": {
+    "pdf_path": "inputs/vision/devis_fictif.pdf",
+    "pdf_size_bytes": 68750,
+    "pdf_sha256": "e89c8a1be152a80360b4f359e77af05923d7f6b521bfd8854d98d85f0e5e60d4",
+    "pages_total": 1,
+    "dpi": 100,
+    "schema": "ExtractionPage",
+    "prompt_chars": 6374,
+    "max_tokens": 4096,
+    "temperature": 0.1,
+    "concurrency": 4,
+    "page": 0,
+    "width": 827,
+    "height": 1170
+  },
+  "metrics": {
+    "requests": 4,
+    "latency_s": 25.102,
+    "latency_max_s": 25.129,
+    "wall_s": 25.212,
+    "prompt_tokens": 3106,
+    "completion_tokens": 1296.0,
+    "total_tokens": 4402,
+    "tokens_per_s": 51.63,
+    "batch_tokens_per_s": 205.62,
+    "pages_per_hour": 571.2,
+    "structured_ok": 1,
+    "fields_total": 92,
+    "field_accuracy": 0.9565,
+    "field_accuracy_min": 0.9565
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6381.0,
+    "util_avg_pct": 95.0,
+    "power_avg_w": 84.3,
+    "energy_wh": 0.5901,
+    "duration_s": 25.21,
+    "samples": 25
+  },
+  "outputs": [
+    "outputs/vision/vision_6b937f.json"
+  ]
+}

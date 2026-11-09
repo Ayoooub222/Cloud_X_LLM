@@ -1,0 +1,11 @@
+# Helm values for nvdp/nvidia-device-plugin (single-node k3s, WSL2 and AWS).
+# The plugin pod must run with the nvidia runtime, otherwise it cannot see
+# /dev/dxg and the WSL NVML library, and it reports no GPU.
+runtimeClassName: nvidia
+
+# Feature discovery is not needed on a single node. The chart's default node
+# affinity is satisfied by the nvidia.com/gpu.present=true node label.
+gfd:
+  enabled: false
+nfd:
+  enabled: false

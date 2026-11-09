@@ -1,0 +1,84 @@
+# Assumptions of the cost model (src/cost). Prices are in conf/prices.yaml, measurements in
+# results/benchmark. Change a value here, rerun: python -m src.cost.report
+
+# Utilization = share of the paid hours spent serving at the sustained rate. An instance (or a
+# laptop) costs the same when idle, so the cost per request is divided by it.
+utilizations: [1.0, 0.5, 0.1]
+
+aws:
+  ebs_root_gb: 100        # Terraform root_volume_size default (infra/aws/variables.tf)
+  s3_results_gb: 1        # benchmark records and MLflow export, negligible
+
+local:
+  # ASSUMPTIONS, not measured: laptop price, service life, and wall power / GPU power
+  # (CPU, RAM, PSU losses; nvidia-smi only measures the GPU).
+  hardware_eur: 1400
+  lifetime_years: 3
+  system_power_factor: 1.5
+  idle_wall_w: 40         # laptop on and idle, screen off; charged every hour like the amortization
+
+# One workload per task: where its sustained throughput and energy come from.
+workloads:
+  audio:
+    unit: transcription of a 66.42 s clip
+    load_tag_prefix: k6-audio-r          # k6 steps, task "load"
+    reference_env: local-wsl2-rtx3070laptop
+    audio_s_per_request: 66.42
+    egress_kb_per_request: 2             # JSON transcript
+    coldstart: {task: coldstart, tag: coldstart-audio, env: local-k3s-rtx3070laptop, field: t_first_s}
+    # Quality on the same clip (lower is better), bf16 on the 3070 and fp16 on the T4.
+    # OpenAI is not measured: paid API, zero budget.
+    quality:
+      field: wer
+      self_hosted: {task: audio, tag: ls66-c1, env: local-wsl2-rtx3070laptop}
+      variants:
+        fp16 on the T4: {task: audio, tag: ls66-c1, env: kaggle-t4}
+      apis:
+        groq-whisper-large-v3-turbo: {task: audio, tag: api-c1, env: api-groq}
+  vision:
+    unit: extraction of one quote page
+    load_tag_prefix: k6-vision-r
+    reference_env: local-wsl2-rtx3070laptop
+    egress_kb_per_request: 4             # JSON extraction
+    coldstart: {task: coldstart, tag: coldstart-vision, env: local-k3s-rtx3070laptop, field: t_first_s}
+    # Tokens of one page as billed by the API (usage returned by Gemini on the same page).
+    tokens: {task: vision, tag: api-c1, env: api-gemini}
+    quality:
+      field: field_accuracy
+      self_hosted: {task: vision, tag: conc-c1, env: local-wsl2-rtx3070laptop}
+      variants:
+        fp16 on the T4: {task: vision, tag: conc-c1, env: kaggle-t4}
+      apis:
+        gemini-3.1-flash-lite: {task: vision, tag: api-c1, env: api-gemini}
+        gemini-3.1-flash-lite-batch: {task: vision, tag: api-c1, env: api-gemini}   # same model
+
+# Where the measured throughput is assumed to run. scale = throughput on the target /
+# throughput measured on reference_env (the SLO margin is assumed to carry over).
+targets:
+  local-3070:
+    kind: local
+  g5.xlarge:
+    kind: aws
+    instance: g5.xlarge
+    # A10G and the 3070 Laptop are both Ampere; the A10G has more memory bandwidth and power
+    # headroom, so 1.0 is a conservative proxy (not measured).
+    scale: {audio: 1.0, vision: 1.0}
+  g4dn.xlarge:
+    kind: aws
+    instance: g4dn.xlarge
+    # Measured on a Kaggle T4 (fp16) against the 3070 (bf16), same inputs and server settings, at
+    # the concurrency where both GPUs saturate (audio c8, vision c4 = max-num-seqs). Audio uses the
+    # LibriSpeech clip of the k6 load test; batch_rtf is a time per audio second, hence 3070 / T4.
+    scale:
+      audio:
+        ratio:
+          numerator: {task: audio, tag: ls66-c8, env: local-wsl2-rtx3070laptop, field: batch_rtf}
+          denominator: {task: audio, tag: ls66-c8, env: kaggle-t4, field: batch_rtf}
+      vision:
+        ratio:
+          numerator: {task: vision, tag: conc-c4, env: kaggle-t4, field: pages_per_hour}
+          denominator: {task: vision, tag: conc-c4, env: local-wsl2-rtx3070laptop, field: pages_per_hour}
+    # Latency of one request alone on the T4: the scaled throughput only holds if it meets the SLO.
+    unloaded_latency:
+      audio: {task: audio, tag: ls66-c1, env: kaggle-t4, field: latency_s}
+      vision: {task: vision, tag: conc-c1, env: kaggle-t4, field: latency_s}

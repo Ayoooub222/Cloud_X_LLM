@@ -1,0 +1,69 @@
+{
+  "run_id": "5d0320",
+  "timestamp": "2026-11-08 21:57:24",
+  "timezone": "+07",
+  "task": "load",
+  "backend": "vllm",
+  "model": "Qwen/Qwen3-VL-2B-Instruct",
+  "tag": "k6-vision-r9",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "local-wsl2-rtx3070laptop",
+    "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.41",
+    "python": "3.13.5",
+    "git_commit": "6a5dfca"
+  },
+  "params": {
+    "target": "vision",
+    "script": "deploy/k6/vision.js",
+    "k6_version": "v2.3.0",
+    "pdf_path": "inputs/vision/devis_fictif.pdf",
+    "dpi": 100,
+    "schema": "conf/schemas/extraction_page.json",
+    "rate_rpm": 9,
+    "duration_s": 120
+  },
+  "metrics": {
+    "target_rps": 0.15,
+    "achieved_rps": 0.1314,
+    "requests": 19,
+    "failed_rate": 0.0,
+    "dropped_iterations": 0,
+    "vus_max": 32,
+    "latency_avg_s": 26.04,
+    "latency_p50_s": 26.533,
+    "latency_p90_s": 27.24,
+    "latency_p95_s": 27.598,
+    "latency_p99_s": 27.7,
+    "latency_max_s": 27.725,
+    "slo_p95_s": 30.0,
+    "slo_ok": 1,
+    "test_run_s": 144.6,
+    "sched.samples": 286,
+    "sched.running_max": 4.0,
+    "sched.running_avg": 3.3881,
+    "sched.waiting_max": 1.0,
+    "sched.waiting_avg": 0.0105,
+    "sched.kv_cache_max": 0.5481,
+    "sched.kv_cache_avg": 0.4572,
+    "sched.waiting_capacity_max": 0.0,
+    "sched.waiting_capacity_avg": 0.0,
+    "sched.waiting_deferred_max": 1.0,
+    "sched.waiting_deferred_avg": 0.0105,
+    "wh_per_request": 0.16368
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070 Laptop GPU",
+    "vram_total_mib": 8192.0,
+    "vram_peak_mib": 6344.0,
+    "util_avg_pct": 98.2,
+    "power_avg_w": 77.3,
+    "energy_wh": 3.11,
+    "duration_s": 144.92,
+    "samples": 140
+  },
+  "outputs": [
+    "outputs/load/k6_5d0320.json"
+  ]
+}

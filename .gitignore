@@ -1,0 +1,29 @@
+# Local data, models and secrets
+data/
+models/
+.env*
+
+# Generated outputs
+mlruns/
+outputs/
+results/*
+!results/benchmark/
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Terraform
+infra/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+results/benchmark/vision/2026-10-*.json
+CONTEXT.md
+CLAUDE.md
+.claude/settings.local.json
+notebooks/

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Git pre-push hook: refuse to push a v* tag that differs from the Terraform git_ref default.
+# Enable once per clone: git config core.hooksPath scripts/hooks
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+while read -r local_ref _local_sha _remote_ref _remote_sha; do
+  case "$local_ref" in
+    refs/tags/v*) "$ROOT/scripts/check_tag_ref.sh" "${local_ref#refs/tags/}" ;;
+  esac
+done

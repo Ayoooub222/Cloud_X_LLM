@@ -1,0 +1,67 @@
+{
+  "run_id": "2341cd",
+  "timestamp": "2026-11-09 08:47:35",
+  "timezone": "UTC",
+  "task": "audio",
+  "backend": "vllm",
+  "model": "openai/whisper-large-v3-turbo",
+  "tag": "ls66-c2",
+  "status": "ok",
+  "error": null,
+  "env": {
+    "label": "kaggle-t4",
+    "platform": "Linux-6.18.55+-x86_64-with-glibc2.39",
+    "python": "3.13.15",
+    "git_commit": "98e2694"
+  },
+  "params": {
+    "audio_file": "inputs/audio/librispeech_1272-141231_66s.flac",
+    "concurrency": 2,
+    "language": "en",
+    "response_format": "verbose_json",
+    "sample_rate": 16000,
+    "channels": 1,
+    "reference_file": "inputs/audio/librispeech_1272-141231_66s.txt"
+  },
+  "metrics": {
+    "audio_duration_s": 66.42,
+    "server_duration_s": 66.42,
+    "requests": 2,
+    "latency_s": 1.422,
+    "latency_max_s": 1.428,
+    "wall_s": 1.431,
+    "rtf": 0.0214,
+    "batch_rtf": 0.0108,
+    "segments": 7,
+    "sched.samples": 3,
+    "sched.running_max": 6.0,
+    "sched.running_avg": 3.3333,
+    "sched.waiting_max": 2.0,
+    "sched.waiting_avg": 0.6667,
+    "sched.kv_cache_max": 0.0253,
+    "sched.kv_cache_avg": 0.014,
+    "sched.waiting_capacity_max": 2.0,
+    "sched.waiting_capacity_avg": 0.6667,
+    "sched.waiting_deferred_max": 0.0,
+    "sched.waiting_deferred_avg": 0.0,
+    "wer": 0.0338,
+    "wer_max": 0.0338,
+    "reference_words": 148,
+    "substitutions": 2,
+    "deletions": 1,
+    "insertions": 2
+  },
+  "gpu": {
+    "name": "Tesla T4",
+    "vram_total_mib": 15360.0,
+    "vram_peak_mib": 9065.0,
+    "util_avg_pct": 72.4,
+    "power_avg_w": 62.0,
+    "energy_wh": 0.0247,
+    "duration_s": 1.43,
+    "samples": 5
+  },
+  "outputs": [
+    "/kaggle/working/out/outputs/audio/audio_2341cd.json"
+  ]
+}

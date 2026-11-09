@@ -1,0 +1,157 @@
+# Registry used for model images (local registry; ECR or GHCR on AWS).
+registry: localhost:5001
+
+# Absolute host path of the model weights, set by scripts/switch_k8s.sh from .env.
+modelsDir: ""
+
+# Size of the in-memory /dev/shm volume (replaces "ipc: host" from compose).
+shmSize: 2Gi
+
+# One Deployment and one Service per model. Only one model has replicas: 1
+# at a time (single 8 GB GPU); scripts/switch_k8s.sh sets the replicas.
+#
+# resources: CPU and memory measured with docker stats under load (RTX 3070 Laptop, compose,
+# 08/11/2026). Memory request = measured peak + margin, limit = request + headroom (an OOM kill
+# restarts a pod that takes 1 to 3 min to reload). CPU request = measured average, limit set
+# well above it: a CPU limit throttles (CFS quota) and would distort the latency measurements.
+# The /dev/shm emptyDir (medium: Memory) counts toward the memory limit, unlike "ipc: host" in
+# compose, hence the headroom.
+models:
+  vision:
+    replicas: 0
+    repository: vllm/vllm-openai
+    tag: v0.29.0
+    containerPort: 8000
+    servicePort: 8000
+    healthPath: /health
+    env:
+      HF_HUB_OFFLINE: "1"
+      VLLM_USE_V2_MODEL_RUNNER: "0"
+      # WSL2: large contiguous CUDA allocations can fail; allocate in segments.
+      PYTORCH_CUDA_ALLOC_CONF: "expandable_segments:True"
+
+    args:
+      - /models/Qwen3-VL-2B-Instruct
+      - --served-model-name
+      - Qwen/Qwen3-VL-2B-Instruct
+      - --gpu-memory-utilization
+      - "0.75"
+      - --max-model-len
+      - "8192"
+      - --max-num-seqs
+      - "4"
+      - --limit-mm-per-prompt
+      - '{"image":1,"video":0}'
+      - --mm-processor-kwargs
+      - '{"max_pixels":1003520}'
+    # measured: 4.0 GiB, ~1.1 cores during the k6 ramp
+    resources:
+      requests:
+        cpu: "1"
+        memory: 5Gi
+      limits:
+        cpu: "4"
+        memory: 6Gi
+
+  image:
+    replicas: 0
+    repository: ghcr.io/leejet/stable-diffusion.cpp
+    tag: master-cuda
+    containerPort: 8080
+    servicePort: 8082
+    healthPath: /sdcpp/v1/capabilities
+    # sd-server installs no SIGTERM handler: as PID 1 it ignored SIGTERM and was killed after the
+    # grace period. Sharing the PID namespace makes it exit at once. Measured in compose (same
+    # mechanism, "init: true"): docker stop 10.3 s, exit 137 -> 0.3-0.4 s, exit 143 (3 runs each).
+    shareProcessNamespace: true
+    terminationGracePeriodSeconds: 10
+    command:
+      - /sd-server
+    # Weight files relative to modelsDir (public repository names); scripts/switch_k8s.sh
+    # overrides them from .env.
+    env:
+      IMAGE_DIFFUSION: Qwen-Image-2.1-Turbo-GGUF/qwen-image-2.1-turbo-Q4_K.gguf
+      IMAGE_VAE: Qwen-Image-2.1-VAE/vae/qwen_image_2.1_vae_bf16.safetensors
+      IMAGE_LLM: Qwen3-VL-8B-Instruct-GGUF/Qwen3VL-8B-Instruct-Q4_K_M.gguf
+    args:
+      - --diffusion-model
+      - /models/$(IMAGE_DIFFUSION)
+      - --vae
+      - /models/$(IMAGE_VAE)
+      - --llm
+      - /models/$(IMAGE_LLM)
+      - --backend
+      - te=cpu
+      - --flash-attn
+      - off,diffusion=on
+      - --steps
+      - "8"
+      - --cfg-scale
+      - "1.0"
+      - --sampling-method
+      - euler
+      - --sigmas
+      - 1.0,0.978453,0.95418,0.926626,0.89508,0.845148,0.704534,0.414568,0.0
+      - -W
+      - "768"
+      - -H
+      - "768"
+      - --listen-ip
+      - 0.0.0.0
+      - --listen-port
+      - "8080"
+      - -v
+    # measured: 4.4 GiB without page cache, up to ~8 cores (text encoder on CPU, te=cpu).
+    # The GGUF weights are memory-mapped: their page cache counts in the cgroup, and a tight
+    # limit evicts it (generation slows down below ~9-10 GiB of free RAM), hence the wide limit.
+    resources:
+      requests:
+        cpu: "4"
+        memory: 5Gi
+      limits:
+        cpu: "12"
+        memory: 10Gi
+
+  audio:
+    replicas: 0
+    repository: cloud-x-llm/vllm-audio
+    tag: v0.29.0
+    containerPort: 8000
+    servicePort: 8001
+    healthPath: /health
+    env:
+      AUDIO_MODEL_DIR: whisper-large-v3-turbo   # relative to modelsDir; switch_k8s.sh overrides it from .env
+      HF_HUB_OFFLINE: "1"
+      VLLM_USE_V2_MODEL_RUNNER: "0"
+    args:
+      - /models/$(AUDIO_MODEL_DIR)
+      - --served-model-name
+      - openai/whisper-large-v3-turbo
+      - --gpu-memory-utilization
+      - "0.6"
+      - --max-num-seqs
+      - "8"
+    # measured: 2.8 GiB in docker stats, 3647 MiB cgroup peak on k3s (page cache included),
+    # up to ~0.5 core at 2 requests/s
+    resources:
+      requests:
+        cpu: 500m
+        memory: 3584Mi
+      limits:
+        cpu: "4"
+        memory: 5Gi
+
+mlflow:
+  enabled: false
+  image: ghcr.io/mlflow/mlflow:v3.16.0
+  port: 5000
+  storageSize: 5Gi
+  # measured on k3s (cgroup memory.peak): 1873 MiB at startup, 1645 MiB after (one worker plus
+  # the job runner and the huey consumer); the old 1536Mi limit was OOMKilled
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 3Gi

@@ -1,0 +1,13 @@
+# Desired state for the Argo CD Application (deploy/argocd/application.yaml), on top of values.yaml.
+# Serve another model = change the replicas here, commit, push: Argo CD syncs within ~3 min.
+# Single GPU: at most one model with replicas 1.
+models:
+  vision:
+    replicas: 0
+  image:
+    replicas: 0
+  audio:
+    replicas: 0
+
+mlflow:
+  enabled: true

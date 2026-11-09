@@ -1,0 +1,585 @@
+{
+  "$defs": {
+    "CategorieMO": {
+      "enum": [
+        "T1",
+        "T2",
+        "T3",
+        "NON_PRECISEE"
+      ],
+      "title": "CategorieMO",
+      "type": "string"
+    },
+    "DefautCT": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "libelle": {
+          "title": "Libelle",
+          "type": "string"
+        },
+        "gravite": {
+          "$ref": "#/$defs/Gravite"
+        }
+      },
+      "required": [
+        "code",
+        "libelle",
+        "gravite"
+      ],
+      "title": "DefautCT",
+      "type": "object"
+    },
+    "Emetteur": {
+      "additionalProperties": false,
+      "properties": {
+        "nom": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Nom"
+        },
+        "adresse": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Adresse"
+        },
+        "code_postal": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Code Postal"
+        },
+        "ville": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Ville"
+        },
+        "siret": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Siret"
+        }
+      },
+      "required": [
+        "nom",
+        "adresse",
+        "code_postal",
+        "ville",
+        "siret"
+      ],
+      "title": "Emetteur",
+      "type": "object"
+    },
+    "EnTete": {
+      "additionalProperties": false,
+      "properties": {
+        "numero_document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Numero Document"
+        },
+        "date_document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Date Document"
+        },
+        "date_fin_validite": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Date Fin Validite"
+        }
+      },
+      "required": [
+        "numero_document",
+        "date_document",
+        "date_fin_validite"
+      ],
+      "title": "EnTete",
+      "type": "object"
+    },
+    "Gravite": {
+      "enum": [
+        "MINEURE",
+        "MAJEURE",
+        "CRITIQUE"
+      ],
+      "title": "Gravite",
+      "type": "string"
+    },
+    "LigneFrais": {
+      "additionalProperties": false,
+      "properties": {
+        "designation": {
+          "title": "Designation",
+          "type": "string"
+        },
+        "montant_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Montant Ht"
+        }
+      },
+      "required": [
+        "designation",
+        "montant_ht"
+      ],
+      "title": "LigneFrais",
+      "type": "object"
+    },
+    "LigneMainOeuvre": {
+      "additionalProperties": false,
+      "properties": {
+        "designation": {
+          "title": "Designation",
+          "type": "string"
+        },
+        "categorie": {
+          "$ref": "#/$defs/CategorieMO"
+        },
+        "temps": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Temps"
+        },
+        "taux_horaire_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Taux Horaire Ht"
+        },
+        "montant_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Montant Ht"
+        }
+      },
+      "required": [
+        "designation",
+        "categorie",
+        "temps",
+        "taux_horaire_ht",
+        "montant_ht"
+      ],
+      "title": "LigneMainOeuvre",
+      "type": "object"
+    },
+    "LignePiece": {
+      "additionalProperties": false,
+      "properties": {
+        "reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reference"
+        },
+        "designation": {
+          "title": "Designation",
+          "type": "string"
+        },
+        "quantite": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Quantite"
+        },
+        "prix_unitaire_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prix Unitaire Ht"
+        },
+        "remise": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Remise"
+        },
+        "montant_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Montant Ht"
+        },
+        "taux_tva": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Taux Tva"
+        }
+      },
+      "required": [
+        "reference",
+        "designation",
+        "quantite",
+        "prix_unitaire_ht",
+        "remise",
+        "montant_ht",
+        "taux_tva"
+      ],
+      "title": "LignePiece",
+      "type": "object"
+    },
+    "Lisibilite": {
+      "enum": [
+        "BONNE",
+        "MOYENNE",
+        "MAUVAISE"
+      ],
+      "title": "Lisibilite",
+      "type": "string"
+    },
+    "Mentions": {
+      "additionalProperties": false,
+      "properties": {
+        "mot_devis_ou_ordre_reparation": {
+          "title": "Mot Devis Ou Ordre Reparation",
+          "type": "boolean"
+        },
+        "duree_validite_indiquee": {
+          "title": "Duree Validite Indiquee",
+          "type": "boolean"
+        },
+        "zone_bon_pour_accord": {
+          "title": "Zone Bon Pour Accord",
+          "type": "boolean"
+        },
+        "taux_horaire_affiche": {
+          "title": "Taux Horaire Affiche",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mot_devis_ou_ordre_reparation",
+        "duree_validite_indiquee",
+        "zone_bon_pour_accord",
+        "taux_horaire_affiche"
+      ],
+      "title": "Mentions",
+      "type": "object"
+    },
+    "ResultatCT": {
+      "enum": [
+        "FAVORABLE",
+        "DEFAVORABLE_MAJEURE",
+        "DEFAVORABLE_CRITIQUE",
+        "NON_APPLICABLE"
+      ],
+      "title": "ResultatCT",
+      "type": "string"
+    },
+    "Totaux": {
+      "additionalProperties": false,
+      "properties": {
+        "total_ht": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Ht"
+        },
+        "taux_tva": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Taux Tva"
+        },
+        "total_tva": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Tva"
+        },
+        "total_ttc": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Total Ttc"
+        }
+      },
+      "required": [
+        "total_ht",
+        "taux_tva",
+        "total_tva",
+        "total_ttc"
+      ],
+      "title": "Totaux",
+      "type": "object"
+    },
+    "TypeDocument": {
+      "enum": [
+        "DEVIS_GARAGE",
+        "FACTURE_GARAGE",
+        "PV_CONTROLE_TECHNIQUE",
+        "AUTRE"
+      ],
+      "title": "TypeDocument",
+      "type": "string"
+    },
+    "Vehicule": {
+      "additionalProperties": false,
+      "properties": {
+        "immatriculation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Immatriculation"
+        },
+        "marque_modele": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Marque Modele"
+        },
+        "vin": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Vin"
+        },
+        "kilometrage": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Kilometrage"
+        },
+        "date_mise_circulation": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Date Mise Circulation"
+        }
+      },
+      "required": [
+        "immatriculation",
+        "marque_modele",
+        "vin",
+        "kilometrage",
+        "date_mise_circulation"
+      ],
+      "title": "Vehicule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "type_document": {
+      "$ref": "#/$defs/TypeDocument"
+    },
+    "lisibilite": {
+      "$ref": "#/$defs/Lisibilite"
+    },
+    "emetteur": {
+      "$ref": "#/$defs/Emetteur"
+    },
+    "vehicule": {
+      "$ref": "#/$defs/Vehicule"
+    },
+    "en_tete": {
+      "$ref": "#/$defs/EnTete"
+    },
+    "pieces": {
+      "items": {
+        "$ref": "#/$defs/LignePiece"
+      },
+      "maxItems": 40,
+      "title": "Pieces",
+      "type": "array"
+    },
+    "main_oeuvre": {
+      "items": {
+        "$ref": "#/$defs/LigneMainOeuvre"
+      },
+      "maxItems": 25,
+      "title": "Main Oeuvre",
+      "type": "array"
+    },
+    "frais_divers": {
+      "items": {
+        "$ref": "#/$defs/LigneFrais"
+      },
+      "maxItems": 15,
+      "title": "Frais Divers",
+      "type": "array"
+    },
+    "resultat_ct": {
+      "$ref": "#/$defs/ResultatCT"
+    },
+    "defauts_ct": {
+      "items": {
+        "$ref": "#/$defs/DefautCT"
+      },
+      "maxItems": 40,
+      "title": "Defauts Ct",
+      "type": "array"
+    },
+    "totaux": {
+      "$ref": "#/$defs/Totaux"
+    },
+    "mentions": {
+      "$ref": "#/$defs/Mentions"
+    }
+  },
+  "required": [
+    "type_document",
+    "lisibilite",
+    "emetteur",
+    "vehicule",
+    "en_tete",
+    "pieces",
+    "main_oeuvre",
+    "frais_divers",
+    "resultat_ct",
+    "defauts_ct",
+    "totaux",
+    "mentions"
+  ],
+  "title": "ExtractionPage",
+  "type": "object"
+}
