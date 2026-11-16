@@ -1,4 +1,4 @@
-openai==3.46.0
+openai==3.50.0
 python-dotenv==1.2.4
 pydantic==2.14.3
 pymupdf==1.28.2
